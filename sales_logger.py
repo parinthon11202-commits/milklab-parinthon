@@ -8,14 +8,14 @@ from google.oauth2.service_account import Credentials
 import requests
 
 
-def send_telegram(menu, qty, price, total):
+def send_telegram(destination, product_name, qty, price, total, rental_or_purchase):
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         print("ไม่พบ Token หรือ Chat ID ของ Telegram ข้ามการแจ้งเตือน")
         return
 
-    text = f"🚨 มียอดขายใหม่เข้าจ้า!\n🥛 เมนู: {menu}\n📦 จำนวน: {qty} ขวด\n💰 ราคา: {price} บาท\n💵 ยอดรวม: {total} บาท"
+    text = f"🚨 อัปเดตรายการใหม่!\n🏔️ สถานที่: {destination}\n🎒 สินค้า: {product_name} ({rental_or_purchase})\n📦 จำนวน: {qty} ชิ้น\n💰 ราคา: {price} บาท\n💵 ยอดรวม: {total} บาท"
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
 
@@ -26,11 +26,18 @@ def send_telegram(menu, qty, price, total):
 
 
 def main():
-    # 1. รับค่าจาก Command Line
+    # 1. รับค่าจาก Command Line ตาม Schema ใหม่ของ Trekking & Camping Buddy
     parser = argparse.ArgumentParser()
-    parser.add_argument("--menu", required=True, type=str)
+    parser.add_argument("--destination", type=str, default="-")
+    parser.add_argument("--trip_type", type=str, default="-")
+    parser.add_argument("--experience_level", type=str, default="-")
+    parser.add_argument("--gear_category", type=str, default="-")
+    parser.add_argument("--product_name", required=True, type=str)
     parser.add_argument("--qty", required=True, type=int)
     parser.add_argument("--price", required=True, type=float)
+    parser.add_argument("--rental_or_purchase", type=str, default="purchase")
+    parser.add_argument("--porter", type=str, default="-")
+    parser.add_argument("--notes", type=str, default="-")
     args = parser.parse_args()
 
     total = args.qty * args.price
@@ -50,12 +57,14 @@ def main():
             creds_dict, scopes=scopes)
         gc = gspread.authorize(creds)
 
-        # *** สำคัญ: ตรงนี้ต้องเปลี่ยนเป็นชื่อไฟล์ Google Sheet ของคุณ ***
+        # *** อย่าลืมสร้าง Sheet ใหม่หรือแก้คอลัมน์ใน Sheet เดิมให้ตรงกับข้อมูลชุดนี้นะครับ ***
         sheet = gc.open("Sales Logger").sheet1
 
-        # 3. บันทึกลง Sheet
-        sheet.append_row([now, args.menu, args.qty, args.price, total])
-        print(f"บันทึก {args.menu} จำนวน {args.qty} ลง Google Sheet สำเร็จ!")
+        # 3. บันทึกลง Sheet (เรียงคอลัมน์: เวลา, ป่า, ประเภททริป, ประสบการณ์, หมวดหมู่อุปกรณ์, ชื่อสินค้า, จำนวน, ราคา, ยอดรวม, เช่า/ซื้อ, ลูกหาบ, หมายเหตุ)
+        sheet.append_row([now, args.destination, args.trip_type, args.experience_level, args.gear_category,
+                          args.product_name, args.qty, args.price, total, args.rental_or_purchase, args.porter, args.notes])
+        print(
+            f"บันทึก {args.product_name} จำนวน {args.qty} ลง Google Sheet สำเร็จ!")
 
     except Exception as e:
         # 4. จัดการ Error กรณีเข้า Sheet ไม่ได้
@@ -64,7 +73,8 @@ def main():
         sys.exit(1)
 
     # ส่งแจ้งเตือนเข้า Telegram
-    send_telegram(args.menu, args.qty, args.price, total)
+    send_telegram(args.destination, args.product_name, args.qty,
+                  args.price, total, args.rental_or_purchase)
 
 
 if __name__ == "__main__":

@@ -12,19 +12,18 @@ load_dotenv(override=True)
 # ==========================================
 # 1. ตั้งค่าหน้าเว็บ
 # ==========================================
-st.set_page_config(page_title="MilkLab AI", page_icon="🥛")
-st.title("🥛 MilkLab AI Assistant")
+st.set_page_config(page_title="Trekking & Camping Buddy", page_icon="🏕️")
+st.title("🏕️ Trekking & Camping Buddy")
 
 # ==========================================
 # 2. ระบบ RAG: ฟังก์ชันโหลดข้อมูลและสร้าง Index
 # (ใช้ @st.cache_resource เพื่อให้โหลดแค่ครั้งเดียว ไม่โหลดใหม่ทุกครั้งที่พิมพ์)
 # ==========================================
 
-
 @st.cache_resource
 def load_rag_system():
-    # 2.1 โหลด menu_kb.md แล้ว split เป็น chunk (หั่นตามย่อหน้า)
-    with open("menu_kb.md", "r", encoding="utf-8") as f:
+    # 2.1 โหลด trekking_gear_kb.md แล้ว split เป็น chunk (หั่นตามย่อหน้า)
+    with open("trekking_gear_kb.md", "r", encoding="utf-8") as f:
         text = f.read()
     chunks = [c.strip() for c in text.split('\n\n') if c.strip()]
 
@@ -39,7 +38,6 @@ def load_rag_system():
     index.add(np.array(embeddings))
 
     return chunks, model, index
-
 
 # เรียกใช้งานระบบ RAG
 chunks, embedder, index = load_rag_system()
@@ -70,7 +68,7 @@ for msg in st.session_state.messages:
 # ==========================================
 # 5. รับคำถามและค้นหาคำตอบ (Retrieve & Generate)
 # ==========================================
-if prompt := st.chat_input("ถามอะไรเกี่ยวกับร้าน MilkLab ได้เลยครับ..."):
+if prompt := st.chat_input("สอบถามการเตรียมตัวเดินป่า เส้นทาง หรือให้จัด Checklist ได้เลยครับ..."):
     # 5.1 แสดงคำถามของลูกค้าบนจอ
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -82,13 +80,16 @@ if prompt := st.chat_input("ถามอะไรเกี่ยวกับร�
 
     # เอาข้อความที่ค้นเจอมาเรียงต่อกันเพื่อเตรียมส่งให้ AI
     retrieved_context = "\n\n".join([chunks[i]
-                                    for i in indices[0] if i < len(chunks)])
+                                     for i in indices[0] if i < len(chunks)])
 
     # 5.3 Generate: ใส่ context ลงใน Gemini prompt
     system_prompt = f"""
-    คุณคือพนักงานร้าน MilkLab คอยตอบคำถามลูกค้าด้วยความสุภาพและเป็นกันเอง
-    กรุณาใช้ "ข้อมูลอ้างอิง" ด้านล่างนี้ในการตอบคำถามเท่านั้น
-    หากลูกค้าถามนอกเหนือจากข้อมูลนี้ ให้ตอบว่า "ขออภัยครับ ทางร้านยังไม่มีข้อมูลในส่วนนี้"
+    คุณคือ "Trekking & Camping Buddy" ผู้ช่วยวางแผนเดินป่าและให้คำแนะนำอุปกรณ์สำหรับมือใหม่
+    บุคลิกของคุณคือ เป็นกันเอง อธิบายเข้าใจง่าย เน้นความปลอดภัย และไม่เชียร์ให้ซื้อของเกินจำเป็น
+    
+    กรุณาใช้ "ข้อมูลอ้างอิง" ด้านล่างนี้ในการตอบคำถามเป็นหลัก 
+    หากผู้ใช้ให้จัด Checklist ให้พยายามแนะนำโดยแบ่งเป็น "ของที่ต้องถือเอง" และ "ของฝากลูกหาบได้" 
+    หากคำถามอยู่นอกเหนือจากข้อมูลอ้างอิงและบริบทการเดินป่า ให้ตอบอย่างสุภาพว่าขออภัยทางเรายังไม่มีข้อมูลในส่วนนี้
     
     ข้อมูลอ้างอิง:
     {retrieved_context}
@@ -96,7 +97,7 @@ if prompt := st.chat_input("ถามอะไรเกี่ยวกับร�
 
     with st.chat_message("assistant"):
         try:
-            # ใช้รุ่น 2.0-flash ที่เราเทสต์กันว่าเสถียรที่สุด
+             
             response = client.models.generate_content(
                 model='gemini-3.5-flash',
                 contents=[system_prompt, prompt],

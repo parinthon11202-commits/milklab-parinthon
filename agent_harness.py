@@ -1,4 +1,4 @@
-"""MilkLab Agent Harness (S2) - Ultimate Edition (Anti-Auto-Link)."""
+"""Trekking & Camping Buddy Agent Harness (S4 Pivot)."""
 
 import argparse
 import json
@@ -12,31 +12,42 @@ from dotenv import load_dotenv
 from google import genai
 
 # ==========================================
-# 2.2 ออกแบบ tool schema
+# ออกแบบ tool schema ใหม่สำหรับ Trekking Buddy
 # ==========================================
 TOOL_SCHEMA = [
     {
         "name": "log_sale",
-        "description": "บันทึกการขายลง Google Sheets และส่ง notification",
+        "description": "บันทึกการจัดเตรียม/เช่า/ซื้ออุปกรณ์ลง Google Sheets และส่ง notification",
         "parameters": {
             "type": "object",
             "properties": {
-                "menu": {"type": "string", "description": "ชื่อเมนู"},
-                "qty": {"type": "integer", "description": "จำนวนที่ขาย"},
-                "price": {"type": "number", "description": "ราคาต่อหน่วย"},
+                "destination": {"type": "string", "description": "สถานที่เดินป่า เช่น ภูกระดึง, ภูสอยดาว"},
+                "trip_type": {"type": "string", "description": "ประเภททริป เช่น 2D1N, 3D2N"},
+                "experience_level": {"type": "string", "description": "ระดับประสบการณ์ เช่น beginner, experienced"},
+                "gear_category": {"type": "string", "description": "หมวดหมู่อุปกรณ์"},
+                "product_name": {"type": "string", "description": "ชื่อสินค้าหรืออุปกรณ์"},
+                "qty": {"type": "integer", "description": "จำนวน"},
+                "price": {"type": "number", "description": "ราคา"},
+                "rental_or_purchase": {"type": "string", "description": "รูปแบบ (rental หรือ purchase)"},
+                "porter": {"type": "string", "description": "มีการใช้ลูกหาบหรือไม่ (yes/no)"},
+                "notes": {"type": "string", "description": "หมายเหตุเพิ่มเติม"}
             },
-            "required": ["menu", "qty", "price"],
+            "required": ["product_name", "qty", "price"],
         },
     },
     {
-        "name": "query_sales",
-        "description": "ดูยอดขายของวันที่ระบุ",
+        "name": "trekking_checklist_generator",
+        "description": "สร้าง Checklist อุปกรณ์ตามข้อมูลของทริป",
         "parameters": {
             "type": "object",
             "properties": {
-                "date": {"type": "string", "description": "วันที่ format YYYY-MM-DD"},
+                "destination": {"type": "string", "description": "สถานที่"},
+                "days": {"type": "integer", "description": "จำนวนวัน"},
+                "nights": {"type": "integer", "description": "จำนวนคืน"},
+                "season": {"type": "string", "description": "ฤดูกาล (summer, rainy, winter)"},
+                "porter": {"type": "boolean", "description": "ใช้ลูกหาบหรือไม่"},
             },
-            "required": ["date"],
+            "required": ["destination", "days", "nights"],
         },
     },
     {
@@ -59,7 +70,7 @@ def parse_command(cmd: str, api_key: str | None = None) -> dict:
     client = genai.Client(api_key=api_key)
 
     prompt = f"""
-    คุณคือ AI Agent แปลงคำสั่งภาษาไทยเป็น JSON
+    คุณคือ AI Agent ผู้ช่วยจัดเตรียมอุปกรณ์เดินป่า แปลงคำสั่งภาษาไทยเป็น JSON
     คำสั่ง: "{cmd}"
     Tool Schema: {json.dumps(TOOL_SCHEMA, ensure_ascii=False)}
     
@@ -96,20 +107,22 @@ def dispatch_tool(tool_call: dict) -> str:
     sheets_creds_str = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
 
     if tool_name == "log_sale":
-        if args.get("qty", 0) <= 0:
-            raise ValueError("quantity must be positive")
-        if args.get("price", 0) <= 0:
-            raise ValueError("price must be positive")
-
-        now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+07")
-        menu = args.get('menu', 'ไม่ระบุ')
         qty = args.get('qty', 0)
         price = args.get('price', 0)
+        if qty <= 0:
+            raise ValueError("quantity must be positive")
+        if price < 0:
+            raise ValueError("price cannot be negative")
+
+        now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+07")
+        destination = args.get('destination', '-')
+        product_name = args.get('product_name', 'ไม่ระบุ')
+        rental_or_purchase = args.get('rental_or_purchase', 'purchase')
         total = qty * price
 
-        # 1. ส่งแจ้งเตือนเข้า Telegram (ต่อ String หลอกโปรแกรม)
+        # 1. ส่งแจ้งเตือนเข้า Telegram
         if bot_token and chat_id:
-            msg = f"🚨 มีออเดอร์ใหม่เข้าจ้า!\n🥛 เมนู: {menu}\n📦 จำนวน: {qty} ขวด\n💰 ราคา: {price} บาท\n💵 ยอดรวม: {total} บาท"
+            msg = f"🚨 แจ้งเตือนการจัดอุปกรณ์!\n🏔️ สถานที่: {destination}\n🎒 สินค้า: {product_name} ({rental_or_purchase})\n📦 จำนวน: {qty} ชิ้น\n💰 ยอดรวม: {total} บาท"
             tg_api = "https://" + "api.telegram.org/bot"
             url = f"{tg_api}{bot_token}/sendMessage"
             requests.post(url, json={"chat_id": chat_id, "text": msg})
@@ -123,26 +136,42 @@ def dispatch_tool(tool_call: dict) -> str:
                 creds_dict = json.loads(sheets_creds_str)
                 gc = gspread.service_account_from_dict(creds_dict)
                 sheet = gc.open("Sales Logger").sheet1
-                sheet.append_row([now_str, menu, qty, price, total])
+                
+                # เรียงคอลัมน์ตาม Schema ใหม่
+                row_data = [
+                    now_str,
+                    destination,
+                    args.get('trip_type', '-'),
+                    args.get('experience_level', '-'),
+                    args.get('gear_category', '-'),
+                    product_name,
+                    qty,
+                    price,
+                    total,
+                    rental_or_purchase,
+                    args.get('porter', '-'),
+                    args.get('notes', '-')
+                ]
+                sheet.append_row(row_data)
             except Exception as e:
                 raise RuntimeError(f"Google Sheets Error: {e}")
 
         return f"OK: row appended at {now_str}"
 
-    elif tool_name == "query_sales":
-        return f"OK: query sales for {args.get('date')}"
+    elif tool_name == "trekking_checklist_generator":
+        dest = args.get('destination')
+        days = args.get('days')
+        return f"OK: กำลังสร้าง Checklist สำหรับ {dest} จำนวน {days} วัน..."
 
     elif tool_name == "send_alert":
         message_text = args.get('message', 'ไม่มีข้อความ')
         if not bot_token or not chat_id:
-            raise ValueError(
-                "ยังไม่ได้ใส่ TELEGRAM_BOT_TOKEN หรือ TELEGRAM_CHAT_ID")
+            raise ValueError("ยังไม่ได้ใส่ TELEGRAM_BOT_TOKEN หรือ TELEGRAM_CHAT_ID")
 
-        # ต่อ String หลอกโปรแกรมเหมือนกัน
         tg_api = "https://" + "api.telegram.org/bot"
         url = f"{tg_api}{bot_token}/sendMessage"
         resp = requests.post(
-            url, json={"chat_id": chat_id, "text": f"🤖 [AI Agent]:\n{message_text}"})
+            url, json={"chat_id": chat_id, "text": f"🏕️ [Trekking Buddy]:\n{message_text}"})
 
         if resp.ok:
             return "OK: ส่งข้อความเข้ามือถือสำเร็จแล้ว!"
@@ -175,9 +204,8 @@ def main() -> int:
         print(msg_tool)
 
         if tool_call['tool'] == "log_sale":
-            total = tool_call["args"].get(
-                "qty", 0) * tool_call["args"].get("price", 0)
-            final_ans = f"บันทึกแล้วยอด {total} บาท"
+            total = tool_call["args"].get("qty", 0) * tool_call["args"].get("price", 0)
+            final_ans = f"บันทึกข้อมูลเรียบร้อยแล้ว ยอดรวม {total} บาท"
         else:
             final_ans = "ดำเนินการสำเร็จ"
 
@@ -185,16 +213,13 @@ def main() -> int:
         print(msg_user_out)
 
         # -------------------------------------------------------------
-        # เพิ่มโค้ดส่วนนี้เข้าไปเพื่อเขียนลงไฟล์ agent_trace.log
+        # เขียนลงไฟล์ agent_trace.log
         try:
-            # เปิดไฟล์ในโหมด 'a' (append) และกำหนด encoding เป็น utf-8 เพื่อให้อ่านภาษาไทยได้
             with open("agent_trace.log", "a", encoding="utf-8") as log_file:
-                # บันทึกข้อมูลที่โชว์บนหน้าจอลงไฟล์
                 log_file.write(f"{msg_user_in}\n")
                 log_file.write(f"{msg_llm}\n")
                 log_file.write(f"{msg_tool}\n")
                 log_file.write(f"{msg_user_out}\n")
-                # ขีดเส้นใต้คั่นแต่ละรอบให้ดูง่ายขึ้น
                 log_file.write("-" * 50 + "\n")
         except Exception as e:
             print(f"[Warning] ไม่สามารถบันทึกลงไฟล์ log ได้: {e}")
@@ -202,8 +227,6 @@ def main() -> int:
 
     except Exception as e:
         print(f"[ERROR] {e}")
-
-        # --- (เพิ่มเติม) บันทึก Error ลงไฟล์ด้วย ---
         try:
             with open("agent_trace.log", "a", encoding="utf-8") as log_file:
                 log_file.write(f"[USER] {args.cmd}\n")
