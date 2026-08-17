@@ -1,16 +1,96 @@
-# S1
-google-genai>=0.4.0
-python-dotenv>=1.0.0
+# ============================================================
+# Trekking & Camping Buddy
+# Production + Development Dependencies
+# Master KB: trekking_gear_kb.md
+#
+# Python:
+#   Required: Python >= 3.10
+#   Recommended: Python 3.12
+#
+# Install:
+#   python -m pip install --upgrade pip
+#   python -m pip install -r requirements.txt
+# ============================================================
 
-# S2
-gspread>=6.0.0
-google-auth>=2.30.0
-requests>=2.31.0
 
-# S3
-streamlit>=1.35.0
-sentence-transformers>=3.0.0
-faiss-cpu>=1.8.0
+# ------------------------------------------------------------
+# AI / Gemini
+# Used by:
+#   app.py
+#   agent_harness.py
+#   caption_generator.py
+# ------------------------------------------------------------
 
-# Dev tools
-pytest>=8.0.0
+# Google Gen AI SDK
+# Required for:
+# - genai.Client(...)
+# - GenerateContentConfig
+# - system_instruction
+# - Structured JSON output / response_json_schema
+google-genai>=2.13.0,<3.0.0
+
+# Loads API keys and project configuration from .env
+python-dotenv>=1.2.2,<2.0.0
+
+
+# ------------------------------------------------------------
+# RAG / Semantic Search
+# Used by app.py
+# ------------------------------------------------------------
+
+# Multilingual embeddings for Thai KB retrieval
+sentence-transformers>=5.6.1,<6.0.0
+
+# Vector similarity search (IndexFlatIP / cosine similarity)
+faiss-cpu>=1.14.3,<2.0.0
+
+# Used directly by app.py for embedding arrays passed to FAISS
+# Broad range keeps compatibility across Python 3.10+
+numpy>=1.26.4,<3.0.0
+
+
+# ------------------------------------------------------------
+# Web UI
+# Used by app.py
+# ------------------------------------------------------------
+
+streamlit>=1.60.0,<2.0.0
+
+
+# ------------------------------------------------------------
+# Google Sheets / Sales Logger
+# Used by sales_logger.py
+# ------------------------------------------------------------
+
+gspread>=6.0.0,<7.0.0
+google-auth>=2.56.2,<3.0.0
+
+
+# ------------------------------------------------------------
+# HTTP / Telegram
+# Used by:
+#   sales_logger.py
+#   agent_harness.py
+# ------------------------------------------------------------
+
+requests>=2.34.2,<3.0.0
+
+
+# ------------------------------------------------------------
+# Time zone support
+# Used by:
+#   sales_logger.py
+#   agent_harness.py
+#
+# Important on Windows because ZoneInfo("Asia/Bangkok")
+# may need the IANA tz database from this package.
+# ------------------------------------------------------------
+
+tzdata>=2026.3
+
+
+# ------------------------------------------------------------
+# Development / Testing
+# ------------------------------------------------------------
+
+pytest>=9.1.1,<10.0.0

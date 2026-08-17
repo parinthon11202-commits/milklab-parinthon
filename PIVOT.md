@@ -1,686 +1,949 @@
 # Pivot to: Trekking & Camping Buddy
 
-## ผู้ช่วยวางแผนเดินป่าและเตรียมอุปกรณ์สำหรับมือใหม่
+## ผู้ช่วย AI วางแผนเดินป่าและเตรียมอุปกรณ์สำหรับมือใหม่ — ดอยขุนตาล
+
+> **ประเภท Domain:** Prototype / ธุรกิจสมมติใหม่สำหรับโปรเจกต์ Session 4  
+> **ขอบเขตระบบปัจจุบัน:** อุทยานแห่งชาติดอยขุนตาลเท่านั้น  
+> **กลุ่มผู้ใช้หลัก:** นักเดินป่ามือใหม่ที่ต้องการวางแผนทริป 2 วัน 1 คืน เตรียมอุปกรณ์ และลดความเสี่ยงก่อนเดินทาง
+
+---
 
 ## Context
 
-* **เจ้าของ / Persona:** ผู้เชี่ยวชาญและคนรักการเดินป่า ที่เน้นให้คำแนะนำมือใหม่แบบเข้าใจง่าย ปลอดภัย และไม่ซื้ออุปกรณ์เกินความจำเป็น
+- **เจ้าของ / Persona:**  
+  Persona ของระบบคือผู้ช่วยที่มีความรู้เรื่องการเดินป่าและการเตรียมอุปกรณ์สำหรับมือใหม่ อธิบายด้วยภาษาไทยแบบสุภาพ เป็นกันเอง ใช้คำว่า “ครับ” อย่างเป็นธรรมชาติ และให้ความสำคัญกับความปลอดภัยมากกว่าการพิชิตยอด
 
-* **ธุรกิจ / ระบบคืออะไร:**
-  บริการผู้ช่วยวางแผนเดินป่าในประเทศไทยสำหรับมือใหม่ โดยให้ข้อมูลเกี่ยวกับเส้นทางเดินป่า ระดับความยาก ระยะทาง จำนวนวัน/คืน ฤดูกาลที่เหมาะสม การไปคนเดียวหรือไปกับทริป รวมถึงช่วยจัด Checklist อุปกรณ์ที่เหมาะกับแต่ละเส้นทาง
+- **ธุรกิจ / ระบบคืออะไร:**  
+  Trekking & Camping Buddy เป็น AI Chatbot + RAG Knowledge Base สำหรับช่วยนักเดินป่ามือใหม่เตรียมทริป **ดอยขุนตาล** โดยเฉพาะ ตั้งแต่ทำความเข้าใจเส้นทาง Y1–Y4, การพักที่ Y2, การเตรียมน้ำ อาหาร เสื้อผ้า รองเท้า ไฟฉาย อุปกรณ์นอน การเดินช่วงเช้ามืด ไปจนถึง Checklist และ Safety Plan
 
-* **กลุ่มผู้ใช้งานหลัก:**
+- **ปัญหา Solopreneur ที่ต้องการแก้:**  
+  มือใหม่มักถามคำถามซ้ำ ๆ และไม่รู้ว่าจะเริ่มเตรียมตัวจากจุดใด เช่น
+  - ต้องเตรียมอุปกรณ์อะไร
+  - ต้องพกน้ำเท่าไร
+  - นอน Y2 ต้องเตรียมอะไร
+  - ขึ้น Y4 เช้ามืดต้องใช้ไฟฉายหรือเสื้อกันหนาวไหม
+  - เส้นทางใช้เวลาประมาณกี่ชั่วโมง
+  - ไปคนเดียวได้หรือไม่
+  - ถ้าฝนตกหรือเกิดอุบัติเหตุควรทำอย่างไร
+  - ข้อมูลเปิด/ปิด ราคา น้ำ รถไฟ และอากาศเชื่อถือได้แค่ไหน
 
-  * มือใหม่ที่ยังไม่เคยเดินป่า
-  * คนที่กำลังเลือกว่าควรเริ่มเดินป่าที่ไหน
-  * คนที่ไม่รู้ว่าต้องเตรียมอุปกรณ์อะไร
-  * คนที่ต้องการเปรียบเทียบป่าหลายแห่ง
-  * คนที่ต้องการทราบว่าเส้นทางเหมาะกับ Solo หรือ Join Trip
-  * คนที่ต้องการวางแผนทริป 2D1N, 3D2N หรือหลายวัน
-  * คนที่ต้องการเตรียมของโดยใช้ลูกหาบหรือแบกเอง
-
----
-
-# ปัญหาที่ระบบต้องช่วยแก้
-
-มือใหม่มักมีปัญหา เช่น
-
-1. ไม่รู้ว่าควรเริ่มเดินป่าที่ไหน
-2. ไม่รู้ว่าแต่ละป่ายากแค่ไหน
-3. ไม่รู้ว่าต้องเดินกี่กิโลเมตร
-4. ไม่รู้ว่าควรพักกี่วันกี่คืน
-5. ไม่รู้ว่าเข้าป่าวันไหนแล้วออกวันไหน
-6. ไม่รู้ว่าไปคนเดียวได้หรือไม่
-7. ไม่รู้ว่าเส้นทางไหนต้องมีไกด์ เจ้าหน้าที่ หรือผู้นำทาง
-8. ไม่รู้ว่ามีลูกหาบหรือไม่
-9. ไม่รู้ว่าควรแบกอะไรเองและอะไรฝากลูกหาบได้
-10. ไม่รู้ว่าต้องเตรียมอุปกรณ์อะไร
-11. เลือกรองเท้า เป้ เต็นท์ หรือถุงนอนไม่เหมาะกับเส้นทาง
-12. ไม่รู้ว่าสภาพอากาศของแต่ละป่าต้องเตรียมตัวอย่างไร
-13. ไม่รู้ว่าเส้นทางเปิดหรือปิดในช่วงที่จะเดินทาง
-14. ไม่รู้ว่าควรไปกับทัวร์หรือจัดทริปเอง
-15. กลัวลืมอุปกรณ์สำคัญ
-
-**Trekking & Camping Buddy** จะช่วยตอบคำถามเหล่านี้ตลอด 24 ชั่วโมง โดยอ้างอิงข้อมูลจาก Knowledge Base ของเส้นทางเดินป่าและอุปกรณ์
+  ระบบช่วยตอบคำถามพื้นฐานเหล่านี้ได้ตลอด 24 ชั่วโมง และช่วยลดภาระการตอบคำถามซ้ำของผู้ดูแลบริการ
 
 ---
 
-# เป้าหมายหลักของระบบ
+## กลุ่มผู้ใช้งานหลัก
 
-ระบบต้องสามารถช่วยผู้ใช้ตั้งแต่
-
-**“อยากเริ่มเดินป่า แต่ไม่รู้จะไปไหน”**
-
-จนถึง
-
-**“พร้อมออกเดินทางแล้ว และมี Checklist ครบทุกอย่าง”**
-
-Flow ตัวอย่าง:
-
-ผู้ใช้เลือกป่า
-→ ระบบอธิบายข้อมูลเส้นทาง
-→ ประเมินความเหมาะสมกับประสบการณ์
-→ แนะนำจำนวนวัน
-→ แนะนำ Solo / Join Trip
-→ ตรวจฤดูกาล
-→ สร้าง Checklist
-→ แนะนำอุปกรณ์
-→ แยกของแบกเอง / ลูกหาบ
-→ แจ้งสิ่งที่ต้องตรวจสอบก่อนออกเดินทาง
+1. มือใหม่ที่ยังไม่เคยเดินป่า
+2. ผู้ที่กำลังวางแผนไปดอยขุนตาลเป็นป่าแรก
+3. ผู้ที่ไม่รู้ว่าต้องเตรียมอุปกรณ์อะไร
+4. ผู้ที่ต้องการ Checklist สำหรับทริป 2 วัน 1 คืน
+5. ผู้ที่ต้องการวางแผนการพัก Y2 และขึ้น Y4
+6. ผู้ที่ต้องการคำแนะนำเรื่องน้ำ อาหาร เสื้อผ้า รองเท้า และอุปกรณ์ฉุกเฉิน
+7. ผู้ที่ต้องการซื้อหรือเช่าอุปกรณ์หลังจากได้รับคำแนะนำ
+8. ผู้ที่ต้องการข้อมูลความปลอดภัยและแผนฉุกเฉินก่อนเดินทาง
 
 ---
 
-# Knowledge Base หลัก
+## ขอบเขตที่ตั้งใจจำกัด
 
-เปลี่ยนจาก
+ระบบเวอร์ชันนี้ **ไม่ใช่ Chatbot แนะนำป่าทั่วประเทศไทย**
 
-`menu_kb.md`
+รองรับเฉพาะ:
 
-เป็น
+> **อุทยานแห่งชาติดอยขุนตาล**
 
-`Thailand_Trekking_KB_Full_Detailed.md`
+เหตุผลที่จำกัด Scope คือ
 
-โดย KB หลักประกอบด้วยข้อมูลเส้นทางเดินป่าที่เรารวบรวมไว้ ได้แก่
+- ทำให้ Knowledge Base มีความลึกมากกว่าการกระจายข้อมูลหลายพื้นที่
+- ลด Hallucination จากการนำข้อมูลคนละอุทยานมาปนกัน
+- ทำให้ทดสอบ RAG ได้ง่าย
+- ทำ Guardrail ได้ชัดเจน
+- เหมาะกับการ Demo ระบบที่มี Domain ชัดเจน
 
-1. ภูกระดึง
-2. ภูสอยดาว
-3. เขาหลวงสุโขทัย
-4. สันหนอกวัว
-5. ผาหินกูบ
-6. เปรโต๊ะลอซู + ดอยมะม่วงสามหมื่น
-7. ดอยทูเล
-8. โมโกจู
+ถ้าผู้ใช้ถามรายละเอียดของอุทยานอื่น ระบบจะตอบอย่างสุภาพว่าฐานความรู้ปัจจุบันรองรับเฉพาะดอยขุนตาล
 
 ---
 
-# ข้อมูลที่ต้องมีสำหรับแต่ละป่า
+# สิ่งที่เปลี่ยนจาก MilkLab°
 
-ระบบควรสามารถค้นข้อมูลต่อไปนี้จาก RAG Knowledge Base ได้
+## 1. `caption_generator.py`
 
-```text
-ชื่อป่า
-จังหวัด
-พื้นที่ดูแล
-ประเภทพื้นที่
-จุดเริ่มเดิน
-จุดหมายหลัก
-ความสูง
-ระยะทาง
-จำนวนวัน
-จำนวนคืน
-ระดับความยาก
-ลักษณะเส้นทาง
-ความเหมาะสมสำหรับมือใหม่
-Solo ได้หรือไม่
-ควร Join Trip หรือไม่
-ต้องมีไกด์หรือไม่
-ต้องมีเจ้าหน้าที่หรือไม่
-มีลูกหาบหรือไม่
-มีลานกางเต็นท์หรือไม่
-มีร้านอาหารหรือไม่
-มีแหล่งน้ำหรือไม่
-อุปกรณ์แนะนำ
-อุปกรณ์เฉพาะเส้นทาง
-ความเสี่ยง
-ฤดูกาล
-ช่วงเดือนที่เหมาะสม
-สถานะเปิด/ปิด
-วันที่ตรวจสอบข้อมูลล่าสุด
-แหล่งอ้างอิง
-```
+### เดิม
 
----
+สร้าง Caption สำหรับธุรกิจ MilkLab° และสินค้า/เมนูของร้าน
 
-# Trek Difficulty System
+### หลัง Pivot
 
-ระบบควรแบ่งระดับความยากออกเป็น 5 ระดับ
+เปลี่ยนเป็น Social Media Caption Generator สำหรับ Trekking & Camping Buddy
 
-## Level 1 — Very Easy
+ความสามารถหลัก:
 
-เหมาะสำหรับผู้ที่ไม่มีประสบการณ์
-
-ลักษณะ:
-
-* เดินระยะสั้น
-* ไม่ชันมาก
-* ไม่ต้องค้างคืน
-* มีระบบช่วยเหลือใกล้เคียง
-
-## Level 2 — Easy
-
-เหมาะสำหรับมือใหม่
-
-ลักษณะ:
-
-* มีทางขึ้นเขาบ้าง
-* เดินหลายกิโลเมตร
-* อาจมีการค้างคืน
-
-## Level 3 — Moderate
-
-ต้องเตรียมร่างกาย
-
-ลักษณะ:
-
-* ระยะทางค่อนข้างไกล
-* มีทางชัน
-* อาจเดินหลายวัน
-
-ตัวอย่าง:
-**ภูกระดึง**
-
-## Level 4 — Hard
-
-ควรมีประสบการณ์มาก่อน
-
-ลักษณะ:
-
-* ทางชัน
-* โคลน
-* ลำธาร
-* ฝน
-* ต้องตั้งแคมป์
-* ต้องพึ่งตัวเองมากขึ้น
+- อ่านข้อมูลจาก `trekking_gear_kb.md`
+- สร้าง Caption เฉพาะดอยขุนตาล
+- รองรับประเภทโพสต์
+  - educational
+  - gear
+  - route
+  - safety
+  - promo
+  - checklist
+- รองรับ Facebook / Instagram / TikTok / General
+- ใช้ Persona และ Guardrail จาก KB
+- ไม่แต่งราคา โปรโมชั่น หรือข้อมูลสดเอง
+- ถ้าเป็นข้อมูล `[DYNAMIC]` จะใส่ Disclaimer
+- รองรับ Debug เพื่อดูว่า Caption อ้างอิง Section ใดของ KB
+- ใช้ Structured JSON Output ก่อนประกอบ Caption
 
 ตัวอย่าง:
 
-* ภูสอยดาว
-* ผาหินกูบ
-
-## Level 5 — Extreme
-
-สำหรับผู้มีประสบการณ์
-
-ลักษณะ:
-
-* Long-distance trekking
-* หลายวัน
-* ป่าลึก
-* ความเหนื่อยสะสมสูง
-* มีระบบสมัครหรือคัดเลือก
-
-ตัวอย่าง:
-**โมโกจู**
+```bash
+python caption_generator.py \
+  --topic "ไฟฉายคาดหัวสำหรับขึ้น Y4" \
+  --kind gear \
+  --platform facebook \
+  --debug
+```
 
 ---
 
-# Beginner Progression
+## 2. `sales_logger.py`
 
-ระบบสามารถแนะนำลำดับการฝึกให้ผู้ใช้ เช่น
+### เดิม
+
+บันทึกข้อมูลยอดขายตาม Schema ของธุรกิจ MilkLab°
+
+### หลัง Pivot
+
+เปลี่ยนเป็น Sales / Rental Logger สำหรับอุปกรณ์ Trekking & Camping Buddy
+
+ข้อมูลหลักที่บันทึก เช่น
 
 ```text
-ภูกระดึง
-↓
-เขาหลวงสุโขทัย
-↓
-ภูสอยดาว
-↓
-ผาหินกูบ
-↓
-สันหนอกวัว
-↓
-ดอยทูเล
-↓
-เปรโต๊ะลอซู + ดอยมะม่วงสามหมื่น
-↓
-โมโกจู
-```
-
-ระบบไม่ควรบอกว่าผู้ใช้ “ต้อง” เดินตามลำดับนี้ แต่ใช้เป็นแนวทางในการเลือกเส้นทางตามประสบการณ์
-
----
-
-# Checklist Generator
-
-เพิ่ม Tool:
-
-`trekking_checklist_generator`
-
-หน้าที่:
-
-สร้าง Checklist อุปกรณ์ตามข้อมูลของทริป
-
-Input:
-
-```json
-{
-  "destination": "ภูสอยดาว",
-  "days": 2,
-  "nights": 1,
-  "season": "rainy",
-  "porter": true,
-  "experience_level": "beginner"
-}
-```
-
-Output ตัวอย่าง:
-
-```text
-รองเท้า Trail
-Trekking Pole
-เสื้อกันฝน
-Rain Cover
-Dry Bag
-ถุงกันทาก
-Headlamp
-Power Bank
-น้ำ
-เกลือแร่
-First Aid
-ถุงเท้าสำรอง
-ชุดแห้งสำหรับนอน
-ถุงนอน
-แผ่นรองนอน
-```
-
----
-
-# Pack Allocation Tool
-
-เพิ่ม Tool:
-
-`pack_allocator`
-
-หน้าที่:
-
-ช่วยแยกอุปกรณ์ออกเป็น
-
-### ต้องแบกเอง
-
-เช่น
-
-* น้ำ
-* เสื้อกันฝน
-* โทรศัพท์
-* Power Bank
-* Headlamp
-* ยาประจำตัว
-* First Aid
-* ขนมฉุกเฉิน
-* บัตรประชาชน
-* เงิน
-
-### ส่งลูกหาบได้
-
-เช่น
-
-* เต็นท์
-* ถุงนอน
-* แผ่นรองนอน
-* เสื้อผ้าสำรอง
-* อาหารมื้อหลัก
-* อุปกรณ์ทำอาหาร
-
-โดยต้องมีข้อความเตือนว่า
-
-> กฎและน้ำหนักลูกหาบแตกต่างกันตามพื้นที่และฤดูกาล ต้องตรวจสอบกับผู้ดูแลพื้นที่ก่อนเดินทาง
-
----
-
-# Trek Recommendation Tool
-
-เพิ่ม Tool:
-
-`trek_recommender`
-
-Input ตัวอย่าง:
-
-```json
-{
-  "experience": "beginner",
-  "preferred_days": 2,
-  "preferred_nights": 1,
-  "fitness": "medium",
-  "solo": true,
-  "preferred_month": "December"
-}
-```
-
-ระบบสามารถแนะนำเส้นทางจาก Knowledge Base พร้อมเหตุผล เช่น
-
-```text
-แนะนำ: เขาหลวงสุโขทัย
-
-เหตุผล:
-- ใช้เวลา 2 วัน 1 คืน
-- ระยะทางไม่ยาวมาก
-- มือใหม่ที่เตรียมร่างกายดีสามารถไปได้
-- ไม่จำเป็นต้องซื้อทัวร์
-- มีระบบอุทยานรองรับ
-```
-
----
-
-# Trek Comparison Tool
-
-เพิ่ม Tool:
-
-`trek_compare`
-
-ใช้สำหรับคำถาม เช่น
-
-* ภูกระดึงกับภูสอยดาวอันไหนยากกว่า
-* สันหนอกวัวกับดอยทูเลต่างกันยังไง
-* ผาหินกูบกับเปรโต๊ะลอซูควรไปที่ไหนก่อน
-
-เปรียบเทียบหัวข้อ:
-
-```text
-ระยะทาง
-ความยาก
-ความชัน
-จำนวนวัน
-สภาพทาง
-ฝน
-โคลน
-ลูกหาบ
-ไกด์
-Solo
-อุปกรณ์
-ความเหมาะสมสำหรับมือใหม่
-```
-
----
-
-# Trek Status Checker
-
-เพิ่ม Tool:
-
-`trek_status_checker`
-
-ใช้ตรวจข้อมูลที่เปลี่ยนตามเวลา เช่น
-
-```text
-เปิดหรือปิด
-วันเปิดฤดูกาล
-วันปิด
-โควตา
-วันเปิดจอง
-จำนวนคน
-กติกาปัจจุบัน
-สภาพอากาศ
-```
-
-ข้อมูลเหล่านี้ไม่ควร Hard-code อยู่ใน Agent แบบถาวร
-
-ต้องมี:
-
-```text
-last_verified
-source
-status
-```
-
-เช่น
-
-```json
-{
-  "destination": "ภูกระดึง",
-  "status": "seasonal_closed",
-  "last_verified": "2026-08-16",
-  "recheck_required": true
-}
-```
-
----
-
-# Gear Recommendation System
-
-ระบบควรแนะนำอุปกรณ์ตาม
-
-```text
-ป่า
-จำนวนวัน
-ฤดู
-ระดับความยาก
-มีลูกหาบหรือไม่
-มือใหม่หรือมีประสบการณ์
-```
-
-ตัวอย่าง:
-
-ผู้ใช้:
-
-> จะไปภูสอยดาว 2 วัน 1 คืน มีลูกหาบ ต้องเอาอะไรบ้าง
-
-ระบบตอบโดยแบ่งเป็น
-
-### ของที่ต้องถือเอง
-
-* Daypack
-* น้ำ
-* เสื้อกันฝน
-* Headlamp
-* Power Bank
-* First Aid
-* ขนม
-* Trekking Pole
-
-### ของฝากลูกหาบได้
-
-* เต็นท์
-* ถุงนอน
-* แผ่นรอง
-* เสื้อผ้าสำรอง
-
-### ของเฉพาะภูสอยดาว
-
-* ถุงกันทาก
-* Dry Bag
-* Rain Cover
-* ถุงเท้าสำรองหลายคู่
-
----
-
-# Service / Product Catalog
-
-| ชื่อ                         |         ราคา | รายละเอียด                                        |
-| ---------------------------- | -----------: | ------------------------------------------------- |
-| Trekking Checklist Generator |          ฟรี | จัด Checklist ตามป่า จำนวนวัน ฤดู และการใช้ลูกหาบ |
-| Trekking Route Advisor       |          ฟรี | ช่วยเลือกป่าตามประสบการณ์และความฟิต               |
-| Trek Comparison              |          ฟรี | เปรียบเทียบป่าหลายแห่ง                            |
-| Packing Assistant            |          ฟรี | แยกของที่ต้องถือเองและของที่ฝากลูกหาบได้          |
-| เซ็ตเต็นท์ + ถุงนอน (เช่า)   | 500 บาท/ทริป | สำหรับ 1–2 คน                                     |
-| Backpack 40L                 |    1,290 บาท | สำหรับทริปค้างคืน 2–3 วัน                         |
-| Trekking Pole                |      350 บาท | ช่วยขึ้น/ลงทางชัน                                 |
-| เซ็ตทำอาหารสนาม              |      450 บาท | เตา + ชุดหม้อสนาม                                 |
-| Rain Protection Set          |          TBD | เสื้อกันฝน + Rain Cover + Dry Bag                 |
-| Beginner Trekking Kit        |          TBD | เซ็ตอุปกรณ์พื้นฐานสำหรับมือใหม่                   |
-
----
-
-# Caption Generator
-
-เปลี่ยนจาก Caption Generator ของธุรกิจเดิมเป็น
-
-`trekking_caption_generator`
-
-หัวข้อที่สร้างได้ เช่น
-
-* แนะนำอุปกรณ์
-* เทคนิคจัดกระเป๋า
-* Trekking Tips
-* รีวิวป่า
-* เปรียบเทียบเส้นทาง
-* Checklist ก่อนเดินทาง
-* เทคนิคใช้ Trekking Pole
-* วิธีเลือกรองเท้า
-* วิธีเลือกเป้
-* โปรโมชั่นอุปกรณ์
-
-ตัวอย่าง Prompt:
-
-```text
-สร้างแคปชั่นภาษาไทยสำหรับมือใหม่เกี่ยวกับการเตรียมตัวเดินภูสอยดาว
-เน้นว่าทางชันและหน้าฝนควรเตรียม Dry Bag, Trekking Pole และถุงกันทาก
-ใช้ภาษาที่เป็นกันเอง
-ลงท้ายด้วย CTA ให้ผู้ใช้ขอ Checklist ฟรีจาก Trekking & Camping Buddy
-```
-
----
-
-# Sales Logger
-
-เปลี่ยน schema จากธุรกิจเดิมเป็น
-
-```text
+schema_version
+transaction_id
 timestamp
-customer_id
+kb_file
+kb_version
 destination
+record_status
 trip_type
-days
-nights
 experience_level
+party_size
+travel_party
+route_plan
+overnight_area
+y4_plan
+transport
+booking_status
+park_status
+y2_status
+weather_check
+water_check
+emergency_contact_check
+recommendation_level
 gear_category
+kb_sections
 product_name
-quantity
-price
+qty
+unit_price
+discount_percent
+subtotal
+discount_amount
+total
+currency
 rental_or_purchase
-porter
+rental_days
 notes
+safety_flags
 ```
+
+จุดสำคัญ:
+
+- Destination ถูกล็อกเป็น **ดอยขุนตาล**
+- รองรับทั้ง `purchase` และ `rental`
+- เชื่อมหมวดสินค้าเข้ากับ Section ใน KB
+- มี `safety_flags`
+- ข้อมูล Dynamic เช่น Y2, อากาศ และน้ำ มีค่าเริ่มต้นเป็น `unknown` / `not_checked`
+- ใช้ Google Sheets เป็น Sales Log
+- สามารถส่ง Notification ไป Telegram
+- ไม่เก็บข้อมูลโรคหรือข้อมูลสุขภาพส่วนบุคคลที่ไม่จำเป็นใน Sales Sheet
+
+---
+
+## 3. `agent_harness.py`
+
+### เดิม
+
+Tool Schema ยังเป็น Domain เดิม และสามารถรับหลาย Destination รวมถึงมี `porter`
+
+### หลัง Pivot
+
+เปลี่ยนเป็น Agent / Tool Router สำหรับดอยขุนตาล
+
+Actions หลัก:
+
+```text
+log_sale
+generate_checklist
+send_alert
+no_action
+```
+
+ความสามารถหลัก:
+
+- ใช้ Gemini Structured Output เพื่อแปลงคำสั่งภาษาไทยเป็น Tool Decision
+- ล็อก Scope เป็นดอยขุนตาล
+- ไม่มี `porter`
+- มี Local Confirmation Gate
+- ไม่บันทึก Sale เพียงเพราะผู้ใช้ “ถาม” เรื่องสินค้า
+- จะเรียก `sales_logger.log_sale()` เมื่อผู้ใช้ยืนยันซื้อ/เช่าชัดเจนเท่านั้น
+- มี Checklist Generator
+- มี Telegram Alert
+- มี `agent_trace.jsonl` สำหรับ Debug
+- มี `--dry-run`
+- มี `--self-check`
+- มี `--json-output`
+
+ตัวอย่างคำสั่ง:
+
+```bash
+python agent_harness.py \
+  --cmd "ยืนยันซื้อไฟฉายคาดหัว 1 ชิ้น ราคา 590 บาท" \
+  --dry-run \
+  --json-output
+```
+
+---
+
+## 4. RAG Knowledge Base
+
+### เดิม
+
+```text
+menu_kb.md
+```
+
+เป็น Knowledge Base สำหรับเมนู/สินค้า MilkLab°
+
+### หลัง Pivot
+
+เปลี่ยนเป็น
+
+```text
+trekking_gear_kb.md
+```
+
+Master KB นี้เป็นฐานความรู้เฉพาะ **ดอยขุนตาล**
+
+ประกอบด้วย Section 0–84 โดยครอบคลุม
+
+- ภาพรวมดอยขุนตาล
+- การสะกด “ดอยขุนตาล” และ “สถานีรถไฟขุนตาน”
+- เส้นทาง Y1–Y4
+- ระยะทาง
+- ความสูง
+- ลักษณะเส้นทาง
+- การพัก Y2
+- การจอง
+- รถไฟ
+- น้ำ
+- อาหาร
+- กระเป๋า
+- รองเท้า
+- เสื้อผ้า
+- กันฝน
+- ไฟฉาย
+- Power bank
+- แผนที่ Offline
+- First Aid
+- Trekking Pole
+- Tent / Sleep System
+- การเดินกลางคืน
+- เทคนิคเดินขึ้น/ลง
+- ฤดูฝน
+- ทาก / แมลง
+- Solo
+- แผน 2 วัน 1 คืน
+- Daypack Y4
+- การซ้อม
+- Checklist
+- FAQ
+- Dynamic Data
+- Guardrail
+- อุณหภูมิ
+- สัญญาณโทรศัพท์
+- Emergency Plan
+- ห้องน้ำ
+- เวลาเดิน
+- สัตว์ป่า / งู
+- ค่าใช้จ่าย
+- เด็ก / ผู้สูงอายุ / โรคประจำตัว
+- Do / Don't
+- ทางเลือกการเดินทาง
+- Data Confidence
+- Source Hierarchy
+- Persona / Tone
+- Few-shot Dialogue
+- Risk Persistence
+- Quality Checklist
+
+---
+
+## 5. `app.py`
+
+### เดิม
+
+หน้า Chatbot และ Branding ยังอิงจาก MilkLab°
+
+### หลัง Pivot
+
+เปลี่ยนเป็น
+
+> **Trekking & Camping Buddy | ดอยขุนตาล**
+
+Architecture:
+
+```text
+User
+  ↓
+Streamlit Chat UI
+  ↓
+Query Understanding
+  ↓
+RAG Retrieval
+  ├─ Sentence Transformer
+  ├─ FAISS
+  ├─ Query Expansion
+  └─ Forced Safety Sections
+  ↓
+Always-on System Policy
+  ↓
+Gemini
+  ↓
+Answer
+```
+
+จุดเด่น:
+
+- ใช้ multilingual embedding สำหรับคำถามภาษาไทย
+- ใช้ FAISS cosine similarity
+- Section 0 สารบัญไม่ถูกนำเข้า Vector Index
+- Section 65, 67, 79, 80, 81, 83, 84 เป็น Always-on Policy
+- มี Forced Safety Routing เช่นคำถาม Y4 / Solo / งู / ฉุกเฉิน
+- มี Dynamic Data detection
+- มี RAG Debug Mode
+- Cache จะสร้าง Index ใหม่เมื่อ KB ถูกแก้ไข
+- Chatbot ไม่อ้างว่าตรวจข้อมูลสด ถ้าระบบไม่มี Live Web Tool
+
+---
+
+## 6. `requirements.txt`
+
+ปรับ Dependency ให้รองรับระบบใหม่ทั้งหมด
+
+ประกอบด้วย
+
+```text
+google-genai
+python-dotenv
+sentence-transformers
+faiss-cpu
+numpy
+streamlit
+gspread
+google-auth
+requests
+tzdata
+pytest
+```
+
+ทำให้โปรเจกต์สามารถติดตั้ง Dependency หลักได้ด้วย
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+---
+
+# Product / Service Catalog
+
+ระบบ Prototype นี้เน้นบริการ AI ก่อน และไม่ได้ Hard-code ราคาสินค้าจริงลงใน Knowledge Base
+
+| Service / Product | ราคา | หมายเหตุ |
+|---|---:|---|
+| Doi Khun Tan RAG Chatbot | ฟรี | ถามข้อมูลเตรียมทริปดอยขุนตาล |
+| Trekking Checklist Generator | ฟรี | สร้าง Checklist ตามบริบททริป |
+| Safety Planning Assistant | ฟรี | ช่วยเตรียมแผนลดความเสี่ยง |
+| Gear Recommendation | ฟรี | แนะนำหมวดอุปกรณ์ตาม KB |
+| Caption Generator | ฟรี | สร้าง Content สำหรับเพจ |
+| Purchase / Rental Logging | ตามราคาที่ผู้ใช้/ผู้ดูแลระบุ | ระบบไม่เดาราคาสินค้าเอง |
+| Telegram Notification | ฟรีใน Prototype | แจ้งรายการที่บันทึกจาก Agent |
+
+### ตัวอย่างหมวดอุปกรณ์ที่ Sales Logger รองรับ
+
+```text
+backpack
+footwear
+shelter
+sleep_system
+rain_gear
+lighting
+water
+food
+first_aid
+navigation
+trekking_pole
+power
+clothing
+emergency_safety
+other
+```
+
+> ราคาและโปรโมชั่นสินค้าไม่ถูกเก็บเป็นข้อเท็จจริงถาวรใน KB  
+> เมื่อต้องบันทึก Sales Transaction ราคาจะต้องมาจาก Input ของผู้ใช้หรือระบบในขณะนั้น
+
+---
+
+# Knowledge Base Design
+
+## Data Confidence
+
+KB แบ่งข้อมูลออกเป็น 4 ประเภท
+
+### `[STATIC]`
+
+ข้อมูลค่อนข้างคงที่ เช่น
+
+- ชื่อสถานที่
+- ลำดับ Y1–Y4
+- หลักความปลอดภัยพื้นฐาน
+
+### `[ESTIMATE]`
+
+ข้อมูลประมาณการ เช่น
+
+- เวลาเดิน
+- ระดับความยาก
+- อุณหภูมิเพื่อวางแผนเสื้อผ้า
+
+AI ต้องใช้คำว่า
+
+```text
+ประมาณ
+โดยทั่วไป
+ควรเผื่อ
+```
+
+### `[DYNAMIC]`
+
+ข้อมูลที่เปลี่ยนได้ เช่น
+
+- เปิด/ปิด
+- ราคา
+- รถไฟ
+- อากาศ
+- Y2/Y4
+- น้ำ
+- ห้องน้ำ
+- ร้านค้า
+- สัญญาณโทรศัพท์
+- เวลาพระอาทิตย์ขึ้น
+- เบอร์ติดต่อ
+
+AI ห้ามเดาข้อมูลเหล่านี้เป็นข้อมูลปัจจุบัน
+
+### `[ANECDOTAL]`
+
+ข้อมูลจากประสบการณ์ผู้เดินทาง ใช้เพื่อประกอบประสบการณ์ แต่ไม่ใช้แทนประกาศทางการ
+
+---
+
+# Guardrails
+
+## Scope Guardrail
+
+ถ้าผู้ใช้ถามรายละเอียดสถานที่อื่น:
+
+```text
+ระบบนี้ออกแบบมาเพื่อให้ข้อมูลการเดินป่าดอยขุนตาลเท่านั้น
+```
+
+และไม่แต่งข้อมูลเพิ่ม
+
+## Dynamic Data Guardrail
+
+ถ้าผู้ใช้ถาม
+
+```text
+พรุ่งนี้ Y2 เปิดไหม
+วันนี้รถไฟออกกี่โมง
+ตอนนี้ค่าเช่าเต็นท์เท่าไร
+พรุ่งนี้ฝนตกไหม
+```
+
+ระบบต้องบอกว่าข้อมูลเปลี่ยนได้และควรตรวจสอบล่าสุดจากแหล่งทางการ
+
+## Safety Guardrail
+
+ระบบ
+
+- ไม่วินิจฉัยโรค
+- ไม่ปรับยา
+- ไม่รับรองว่าผู้ใช้ปลอดภัย 100%
+- ไม่สนับสนุนการฝ่าฝืนการปิดเส้นทาง
+- ให้ Safety Plan เมื่อผู้ใช้ยังยืนยันทำสิ่งที่เสี่ยง
+
+## Transaction Guardrail
+
+คำถาม:
+
+> “ไฟฉายราคา 590 ดีไหม”
+
+ไม่ถือว่าเป็นคำสั่งซื้อ
+
+คำสั่ง:
+
+> “ยืนยันซื้อไฟฉายคาดหัว 1 ชิ้น ราคา 590 บาท”
+
+จึงสามารถผ่าน Confirmation Gate ไปยัง Sales Logger ได้
+
+---
+
+# Conversation / User Flow
+
+ตัวอย่าง Flow หลัก
+
+```text
+User
+↓
+ถามเรื่องดอยขุนตาล
+↓
+RAG ค้น Master KB
+↓
+Chatbot อธิบายข้อมูล
+↓
+ผู้ใช้ขอ Checklist
+↓
+Agent สร้าง Checklist
+↓
+แนะนำหมวดอุปกรณ์ตามบริบท
+↓
+ผู้ใช้ตัดสินใจซื้อ/เช่า
+↓
+Agent ตรวจ Explicit Confirmation
+↓
+sales_logger.py
+↓
+Google Sheets
+↓
+Telegram Notification
+```
+
+---
+
+# ตัวอย่าง Conversation
+
+## Example 1 — Beginner Planning
+
+**User**
+
+> ผมไม่เคยเดินป่ามาก่อน ดอยขุนตาลเหมาะไหม
+
+**Expected Behavior**
+
+- ดึง Section เรื่อง Beginner / Difficulty
+- อธิบายแบบมือใหม่เข้าใจง่าย
+- ไม่รับรองว่าทุกคนไปได้แน่นอน
+- แนะนำการซ้อมและการเตรียมอุปกรณ์
+
+---
+
+## Example 2 — Y4
+
+**User**
+
+> ถ้าจะขึ้น Y4 เช้ามืดต้องเอาอะไรไปบ้าง
+
+**Expected Behavior**
+
+ระบบควรดึงข้อมูลเกี่ยวกับ
+
+- Daypack
+- น้ำ
+- ไฟฉายคาดหัว
+- ไฟสำรอง
+- เสื้อกันลม
+- เสื้อกันฝน
+- Power Bank
+- First Aid
+- ความหนาวช่วงเช้ามืด
+
+---
+
+## Example 3 — Dynamic Data
+
+**User**
+
+> พรุ่งนี้ Y2 เปิดไหม แล้วมีน้ำไหม
+
+**Expected Behavior**
+
+ระบบต้องไม่เดาว่าเปิดหรือมีน้ำ
+
+ควรตอบว่า
+
+- Y2 และน้ำเป็นข้อมูล Dynamic
+- ระบบไม่มี Live Web Check
+- ต้องตรวจล่าสุดจากช่องทางทางการก่อนเดินทาง
+
+---
+
+## Example 4 — Safety
+
+**User**
+
+> ผมจะไปคนเดียวแน่นอน ไม่ต้องห้าม ช่วยบอกว่าต้องทำอะไร
+
+**Expected Behavior**
+
+- ไม่ดุด่า
+- เตือนความเสี่ยงสั้น ๆ
+- ช่วยลดความเสี่ยง
+- แนะนำ Check-in
+- Offline Map
+- ไฟสำรอง
+- แจ้งเจ้าหน้าที่
+- Stop Conditions
+
+---
+
+## Example 5 — Transaction
+
+**User**
+
+> ยืนยันซื้อไฟฉายคาดหัว 1 ชิ้น ราคา 590 บาท
+
+**Expected Behavior**
+
+```text
+Agent
+↓
+Structured Tool Decision
+↓
+Local Confirmation Gate
+↓
+log_sale()
+↓
+Google Sheets
+↓
+Telegram
+```
+
+---
+
+# Test Plan สำหรับ Session 4
+
+ก่อน Deploy ต้องทดสอบอย่างน้อย 5 คำถาม Domain ใหม่
+
+| # | คำถามทดสอบ | สิ่งที่ต้องตรวจ |
+|---|---|---|
+| 1 | ผมไม่เคยเดินป่ามาก่อน ดอยขุนตาลเหมาะไหม | Beginner answer + KB grounding |
+| 2 | ขึ้น Y4 เช้ามืดต้องเอาอะไรไปบ้าง | Retrieval ของ Y4 / Daypack / Headlamp |
+| 3 | พรุ่งนี้ Y2 เปิดไหม แล้วมีน้ำไหม | Dynamic guardrail ไม่ Hallucinate |
+| 4 | ผมจะไปคนเดียวแน่นอน ต้องเตรียมอะไร | Risk Persistence + Safety Plan |
+| 5 | ช่วยจัด Checklist ดอยขุนตาล 2 วัน 1 คืน | Checklist ครบและตรง Scope |
+
+### Test Status
+
+> **TODO ก่อนส่งงาน:** รันทั้ง 5 คำถามบน Deploy จริงและบันทึกผลว่า PASS / FAIL
+
+| # | Result | Note |
+|---|---|---|
+| 1 | ⬜ Not tested | |
+| 2 | ⬜ Not tested | |
+| 3 | ⬜ Not tested | |
+| 4 | ⬜ Not tested | |
+| 5 | ⬜ Not tested | |
+
+---
+
+# Technology Stack
+
+```text
+Python
+Streamlit
+Google Gemini API
+Google Gen AI SDK
+Sentence Transformers
+FAISS
+NumPy
+Google Sheets
+gspread
+Google Auth
+Telegram Bot API
+dotenv
+pytest
+```
+
+---
+
+# Repository Structure
+
+```text
+project/
+│
+├── app.py
+├── caption_generator.py
+├── sales_logger.py
+├── agent_harness.py
+├── trekking_gear_kb.md
+├── requirements.txt
+├── PIVOT.md
+├── README.md
+├── agent_trace.jsonl
+└── .env
+```
+
+> `.env` ต้องไม่ Commit API Key หรือ Secret ขึ้น GitHub
+
+---
+
+# Deployment
+
+## HuggingFace Spaces
+
+**Space name แนะนำ**
+
+```text
+doi-khun-tan-rag
+```
+
+หรือ
+
+```text
+trekking-camping-buddy-rag
+```
+
+### Deploy URL
+
+```text
+TODO: ใส่ HuggingFace Space URL หลัง Deploy สำเร็จ
+```
+
+### Deploy Checklist
+
+- [ ] Push branch `pivot`
+- [ ] ตรวจ `requirements.txt`
+- [ ] ตั้ง HuggingFace Secrets
+- [ ] Deploy Space ใหม่
+- [ ] เปิดหน้า Space ได้
+- [ ] ทดสอบ 5 คำถาม
+- [ ] ไม่มี MilkLab° reference ใน UI หลัก
+- [ ] ไม่มี API Key ใน GitHub
+
+---
+
+# Pull Request
+
+## Branch
+
+```text
+pivot
+```
+
+## Target
+
+```text
+main
+```
+
+## PR Title
+
+```text
+Pivot to Trekking & Camping Buddy
+```
+
+## PR Body
+
+ใช้เนื้อหาจาก `PIVOT.md` นี้เป็นคำอธิบายหลัก
+
+### PR URL
+
+```text
+TODO: ใส่ GitHub Pull Request URL
+```
+
+---
+
+# Peer Review
+
+ตามโจทย์ Session 4 ต้อง Review PR ของเพื่อนอย่างน้อย 1 คน
+
+Comment อย่างน้อย 3 ประเภท
+
+### Strength
 
 ตัวอย่าง:
 
-```json
-{
-  "destination": "ภูสอยดาว",
-  "trip_type": "2D1N",
-  "experience_level": "beginner",
-  "gear_category": "trekking_pole",
-  "product_name": "Trekking Pole",
-  "quantity": 1,
-  "price": 350,
-  "rental_or_purchase": "purchase"
-}
-```
+> จุดที่ทำได้ดีคือ Domain ชัดและเห็นการเปลี่ยน Schema/Prompt จาก MilkLab° ชัดเจนครับ
 
----
+### Question
 
-# Agent Harness
+ตัวอย่าง:
 
-Agent หลักควรมี Tools ประมาณนี้
+> ถ้าข้อมูลที่เปลี่ยนตามเวลา เช่น ราคา หรือสถานะบริการเปลี่ยน ระบบมีวิธีป้องกันข้อมูลเก่าอย่างไรครับ
+
+### Suggestion
+
+ตัวอย่าง:
+
+> แนะนำให้เพิ่ม Test Case สำหรับคำถามที่อยู่นอก Domain เพื่อดูว่า Chatbot ปฏิเสธได้ถูกต้องหรือไม่ครับ
+
+### หลักฐาน
 
 ```text
-search_trekking_kb
-trek_recommender
-trek_compare
-trekking_checklist_generator
-pack_allocator
-trek_status_checker
-gear_recommender
-sales_logger
-caption_generator
+TODO: แนบ Screenshot Comment Peer Review ใน S4 Worksheet
 ```
 
 ---
 
-# Intent ของผู้ใช้ที่ควรรองรับ
+# Reflection
+
+## สิ่งที่ได้เรียนรู้จากการ Pivot
+
+การ Pivot จาก MilkLab° มาเป็น Trekking & Camping Buddy ทำให้เห็นว่า Pattern หลักของระบบ AI สามารถนำไปใช้กับ Domain อื่นได้ โดยไม่จำเป็นต้องสร้างทุกอย่างใหม่จากศูนย์
+
+สิ่งที่เปลี่ยนจริงไม่ใช่แค่ชื่อหน้าเว็บ แต่ต้องเปลี่ยน
+
+- Prompt
+- Knowledge Base
+- RAG Retrieval
+- Tool Schema
+- Transaction Schema
+- Guardrail
+- Persona
+- Error Handling
+- Test Cases
+- UX ของคำตอบ
+
+สิ่งที่เรียนรู้มากที่สุดคือ **ข้อมูลแต่ละ Domain มีระดับความน่าเชื่อถือไม่เหมือนกัน**
+
+ใน Domain เดินป่า ข้อมูลบางอย่าง เช่น เส้นทางพื้นฐานสามารถเก็บใน KB ได้ แต่ข้อมูลอย่างสถานะเปิด/ปิด น้ำ อากาศ ราคา และรถไฟสามารถเปลี่ยนได้ จึงไม่ควรให้ AI เดาจากข้อมูลเก่า
+
+จึงเพิ่มแนวคิด
 
 ```text
-ask_destination_info
-compare_destinations
-recommend_destination
-ask_distance
-ask_difficulty
-ask_duration
-ask_solo_or_tour
-ask_guide_requirement
-ask_porter
-ask_equipment
-generate_checklist
-packing_help
-ask_weather_preparation
-ask_open_close_status
-ask_best_season
-gear_recommendation
-rent_equipment
-buy_equipment
+STATIC
+ESTIMATE
+DYNAMIC
+ANECDOTAL
 ```
 
----
+เพื่อช่วยควบคุมวิธีที่ AI ใช้ข้อมูล
 
-# ตัวอย่าง Conversation Flow
+อีกสิ่งที่ได้เรียนรู้คือ RAG อย่างเดียวไม่เพียงพอสำหรับกฎสำคัญ เพราะ Vector Search อาจไม่ดึง Guardrail Section ทุกครั้ง จึงย้ายกฎสำคัญ เช่น Scope, Dynamic Data, Persona และ Safety ไปเป็น **Always-on System Policy**
 
-User:
+ในส่วน Agent ได้เรียนรู้เรื่อง Side Effect ว่า AI ไม่ควรเขียนข้อมูลลง Google Sheets เพียงเพราะตีความว่าผู้ใช้สนใจสินค้า จึงเพิ่ม Local Confirmation Gate และให้ `sales_logger.py` เป็นจุดเดียวที่เขียน Transaction
 
-> ผมไม่เคยเดินป่าเลย ควรเริ่มที่ไหน
+จากโปรเจกต์นี้จึงได้ฝึกทั้ง
 
-Agent:
-
-1. อ่าน Trekking KB
-2. ดูระดับ Beginner
-3. แนะนำภูกระดึงหรือเส้นที่เหมาะ
-4. อธิบายเหตุผล
-5. ถาม/ใช้ข้อมูลจำนวนวันและช่วงเดือน
-6. สร้าง Checklist
-
----
-
-User:
-
-> ผมจะไปภูสอยดาวเดือนสิงหาคม 2 วัน 1 คืน มีลูกหาบ
-
-Agent:
-
-1. ค้น `ภูสอยดาว`
-2. ตรวจฤดูกาล/สถานะล่าสุด
-3. อ่านข้อมูลทางชัน/ฝน
-4. สร้าง Checklist
-5. แยกของแบกเองกับลูกหาบ
-6. แนะนำอุปกรณ์เฉพาะ:
-
-   * Trekking Pole
-   * Dry Bag
-   * Rain Cover
-   * ถุงกันทาก
-   * ถุงเท้าสำรอง
+- RAG
+- Prompt Engineering
+- Structured Output
+- Agent / Tool Routing
+- Guardrail
+- Sales Logging
+- API Integration
+- UX
+- Safety Design
+- Testing
+- Deployment workflow
 
 ---
 
-User:
+# จุดที่แตกต่างจาก MilkLab° อย่างชัดเจน
 
-> ผมผ่านภูสอยดาวมาแล้ว อยากไปยากกว่านี้
+MilkLab° เป็นระบบสำหรับสินค้า/เมนูในร้านเครื่องดื่ม
 
-Agent:
+Trekking & Camping Buddy เป็นระบบที่ต้องจัดการข้อมูลหลายประเภทมากขึ้น เช่น
 
-1. อ่านประวัติ/ระดับประสบการณ์
-2. ค้น Difficulty Ranking
-3. แนะนำ:
+```text
+Route
+Distance
+Elevation
+Gear
+Weather preparation
+Water
+Camping
+Safety
+Emergency
+Solo risk
+Dynamic park status
+Transaction
+```
 
-   * ผาหินกูบ
-   * สันหนอกวัว
-   * ดอยทูเล
-4. เปรียบเทียบข้อแตกต่าง
-5. ไม่แนะนำโมโกจูทันทีถ้ายังไม่มีประสบการณ์ Long-distance
-
----
-
-# Personality ของ Trekking & Camping Buddy
-
-ควรเป็น:
-
-* เป็นกันเอง
-* อธิบายให้มือใหม่เข้าใจง่าย
-* ไม่ข่มผู้ใช้เรื่องประสบการณ์
-* เน้นความปลอดภัย
-* ไม่เชียร์ให้ซื้อของเกินจำเป็น
-* บอกได้ว่าอะไร “เช่าก่อนได้”
-* แยกข้อมูลแน่นอนกับข้อมูลที่ต้องตรวจใหม่
-* ไม่เดาวันเปิด/ปิด
-* ไม่สนับสนุน Solo Trekking ในเส้นที่ต้องใช้เจ้าหน้าที่
-* ใช้หน่วย กิโลเมตร / เมตร / วัน / คืน อย่างชัดเจน
+จึงต้องเพิ่ม Guardrail และ Safety Logic มากกว่าระบบเดิม
 
 ---
 
 # Main System Goal
 
-เป้าหมายสุดท้ายของ **Trekking & Camping Buddy** คือ
+เป้าหมายของ **Trekking & Camping Buddy** คือ
 
-> **ช่วยให้คนที่ไม่เคยเดินป่า สามารถเลือกเส้นทางที่เหมาะกับตัวเอง วางแผนจำนวนวัน เตรียมอุปกรณ์ จัดกระเป๋า และเดินทางได้อย่างมั่นใจและปลอดภัยมากขึ้น**
+> **ช่วยให้นักเดินป่ามือใหม่ที่ต้องการไปดอยขุนตาล สามารถเข้าใจเส้นทาง วางแผนทริป เตรียมอุปกรณ์ ตรวจความเสี่ยง และออกเดินทางได้อย่างเป็นระบบมากขึ้น โดย AI ต้องไม่สร้างความมั่นใจเกินข้อมูลที่มี**
 
-โดยใช้
+แกนหลักของระบบคือ
 
-**Trekking Knowledge Base + Gear Knowledge Base + Checklist Generator + Route Recommendation + Packing Assistant**
+```text
+Doi Khun Tan Knowledge Base
++
+RAG Chatbot
++
+Checklist Generator
++
+Safety Guardrails
++
+Agent Tool Router
++
+Sales / Rental Logger
++
+Caption Generator
+```
 
-เป็นแกนหลักของระบบ
+---
+
+# Session 4 Deliverable Status
+
+| Deliverable | Status |
+|---|---|
+| Pivot Domain | ✅ Trekking & Camping Buddy |
+| `caption_generator.py` | ✅ Pivot แล้ว |
+| `sales_logger.py` | ✅ Pivot แล้ว |
+| `agent_harness.py` | ✅ Pivot แล้ว |
+| RAG KB | ✅ `trekking_gear_kb.md` |
+| `app.py` branding + RAG | ✅ Pivot แล้ว |
+| `requirements.txt` | ✅ อัปเดตแล้ว |
+| `PIVOT.md` | ✅ อัปเดตแล้ว |
+| Test 5 questions | ⬜ ต้องทดสอบบนระบบจริง |
+| HuggingFace Space | ⬜ ต้อง Deploy |
+| Deploy URL | ⬜ ต้องใส่ |
+| PR `pivot` → `main` | ⬜ ต้องเปิด |
+| PR URL | ⬜ ต้องใส่ |
+| Peer Review | ⬜ ต้องทำ |
+| Peer Review Screenshot | ⬜ ต้องแนบ |
+| Reflection | ✅ Draft พร้อมใช้ |
+
+---
+
+## Final Note
+
+ไฟล์นี้สะท้อน **เวอร์ชันปัจจุบันของโปรเจกต์** ซึ่งตั้งใจจำกัด Scope เป็นดอยขุนตาล และไม่ใช้ข้อมูลหลายอุทยานหรือระบบลูกหาบแบบ Draft รุ่นก่อน
+
+ก่อนส่งงาน Session 4 ให้เติมเพียง
+
+1. HuggingFace Deploy URL
+2. GitHub PR URL
+3. ผล Test 5 คำถาม
+4. Peer Review Screenshot
+
+จากนั้นจึงถือว่า Deliverable ของ Session 4 ครบตามโจทย์
