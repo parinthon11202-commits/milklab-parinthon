@@ -10,36 +10,13 @@ from google import genai
 from google.genai import types
 from sentence_transformers import SentenceTransformer
 
-
 # ============================================================
-# Trekking & Camping Buddy
+# Nature Noob: Doi Khuntan
 # Beginner Hiking Chatbot - DOI KHUN TAN ONLY
 # ============================================================
-#
-# ขอบเขตของระบบ:
-# - ผู้ใช้งานเป้าหมาย: นักเดินป่ามือใหม่
-# - สถานที่: อุทยานแห่งชาติดอยขุนตาลเท่านั้น
-# - Knowledge Base: trekking_gear_kb.md
-# - AI: Gemini
-# - Retrieval: Sentence Transformers + FAISS
-#
-# Environment Variable:
-# - GOOGLE_API_KEY หรือ GEMINI_API_KEY
-#
-# หมายเหตุ:
-# ข้อมูลที่เปลี่ยนตามเวลา เช่น
-# - สถานะเปิด/ปิดอุทยาน
-# - สถานะ Y2 / Y4
-# - ราคา
-# - ตารางรถไฟ
-# - พยากรณ์อากาศ
-# ต้องตรวจสอบล่าสุดจากแหล่งทางการ
-# ระบบนี้จะไม่เดาข้อมูลดังกล่าวขึ้นเอง
-# ============================================================
-
 
 # ------------------------------------------------------------
-# 0. Path และ Environment
+# 0. Path, Environment และชื่อแอป
 # ------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -47,31 +24,232 @@ KB_PATH = BASE_DIR / "trekking_gear_kb.md"
 
 load_dotenv(BASE_DIR / ".env", override=True)
 
+APP_NAME = "Nature Noob: Doi Khuntan"
+APP_TAGLINE = "เพื่อนพาเนเจอร์นู้บไปดอยขุนตาล — คู่มือเฉพาะทางสำหรับมือใหม่"
+
 
 # ------------------------------------------------------------
 # 1. ตั้งค่าหน้าเว็บ
 # ------------------------------------------------------------
 
 st.set_page_config(
-    page_title="Trekking & Camping Buddy | ดอยขุนตาล",
-    page_icon="🏕️",
-    layout="centered",
-)
-
-st.title("🏕️ Trekking & Camping Buddy")
-st.caption(
-    "ผู้ช่วยสำหรับนักเดินป่ามือใหม่ — ให้ข้อมูลเฉพาะการเดินป่าและค้างคืนที่ดอยขุนตาล"
+    page_title=f"{APP_NAME}",
+    page_icon="⛺",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 
 # ------------------------------------------------------------
-# 2. System Instruction
+# 1.1 ธีม "Nature Noob" — CSS
 # ------------------------------------------------------------
 
-SYSTEM_INSTRUCTION = """
-คุณคือ "Trekking & Camping Buddy" ผู้ช่วยสำหรับนักเดินป่ามือใหม่
+CUSTOM_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap');
+
+:root {
+    --primary-green: #344c33;
+    --primary-light: #466045;
+    --bg-main: #f5f1e7;
+    --card-yellow: #deb865;
+    --alert-yellow: #eaddb6;
+    --text-dark: #2c2c2c;
+    --text-light: #ffffff;
+}
+
+html, body, [class*="css"] {
+    font-family: 'Sarabun', sans-serif;
+}
+
+/* ---------- พื้นหลังหลัก (Topographic Map pattern) ---------- */
+.stApp {
+    background-color: var(--bg-main);
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23344c33' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+}
+
+/* ---------- Header / Hero ---------- */
+.hero-container {
+    text-align: center;
+    padding: 2rem 1rem 1rem 1rem;
+    color: var(--text-dark);
+}
+.hero-container h1 {
+    font-family: 'Kanit', sans-serif;
+    font-weight: 700;
+    font-size: 2.8rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+.hero-container p {
+    font-family: 'Sarabun', sans-serif;
+    font-size: 1.1rem;
+    color: #555;
+    margin-top: 0;
+}
+
+/* ---------- การ์ดต้อนรับ (Welcome Card) ---------- */
+.welcome-card {
+    background-color: var(--card-yellow);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.welcome-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.welcome-header img {
+    width: 60px;
+    height: auto;
+}
+.welcome-text h3 {
+    font-family: 'Kanit', sans-serif;
+    margin: 0 0 0.2rem 0;
+    font-size: 1.2rem;
+    color: var(--text-dark);
+}
+.welcome-text p {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+.pill-container {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+.pill {
+    background-color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* ---------- ประกาศสำคัญ (Alert Card) ---------- */
+.alert-card {
+    background-color: var(--alert-yellow);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 2rem;
+    border-left: 5px solid #dcb556;
+}
+.alert-card h4 {
+    font-family: 'Kanit', sans-serif;
+    margin: 0 0 0.3rem 0;
+    color: #8c7128;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.alert-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6a5824;
+}
+
+/* ---------- แถบข้าง (Sidebar) ---------- */
+[data-testid="stSidebar"] {
+    background-color: var(--primary-green) !important;
+}
+[data-testid="stSidebar"] * {
+    color: var(--text-light) !important;
+}
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    font-family: 'Kanit', sans-serif;
+}
+.sidebar-info-card {
+    background-color: var(--bg-main);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark) !important;
+}
+.sidebar-info-card * {
+    color: var(--text-dark) !important;
+    margin: 0.2rem 0;
+    font-size: 0.9rem;
+}
+.sidebar-info-card b {
+    font-family: 'Kanit', sans-serif;
+}
+div[data-testid="stExpander"] {
+    background-color: var(--bg-main);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+div[data-testid="stExpander"] * {
+    color: var(--text-dark) !important;
+}
+
+/* ปุ่มใน Sidebar */
+.stButton>button {
+    background-color: var(--bg-main);
+    color: var(--text-dark) !important;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+    width: 100%;
+}
+.stButton>button:hover {
+    background-color: var(--card-yellow);
+    color: var(--text-dark) !important;
+}
+
+/* ---------- ข้อความแชท ---------- */
+[data-testid="stChatMessage"] {
+    background: transparent;
+    border: none;
+}
+[data-testid="stChatMessageContent"] {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    color: var(--text-dark);
+}
+[data-testid="stChatMessageContent"] p {
+    color: var(--text-dark);
+}
+/* ฝั่งผู้ใช้ */
+[data-testid="stChatMessage"]:nth-child(even) [data-testid="stChatMessageContent"] {
+    background-color: var(--card-yellow);
+}
+
+/* กล่องพิมพ์ข้อความด้านล่าง */
+[data-testid="stChatInput"] {
+    border-radius: 25px;
+    border: 2px solid var(--primary-light);
+}
+</style>
+"""
+
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+# ------------------------------------------------------------
+# 2. System Instruction (คงเดิม)
+# ------------------------------------------------------------
+
+SYSTEM_INSTRUCTION = f"""
+คุณคือ "{APP_NAME}" ผู้ช่วยสำหรับนักเดินป่ามือใหม่
 ที่ให้ข้อมูลเฉพาะการเดินป่าและการพักค้างคืนที่
 "อุทยานแห่งชาติดอยขุนตาล" เท่านั้น
+
+บุคลิกของคุณ: เหมือนพี่ที่เคยเดินดอยขุนตาลมาหลายรอบ ใจดี รอบคอบ
+พูดจาเป็นกันเองแบบพี่คุยกับน้อง ให้กำลังใจมือใหม่ แต่ไม่ประมาทเรื่องความปลอดภัย
 
 กฎสำคัญ:
 
@@ -154,61 +332,34 @@ SYSTEM_INSTRUCTION = """
 และอย่าอ้างว่าคุณตรวจสอบข้อมูลสดจากอินเทอร์เน็ต เพราะแอปนี้ไม่มีระบบค้นเว็บสด
 """
 
+# ------------------------------------------------------------
+# 3. ฟังก์ชันแบ่ง Markdown เป็น Chunk (คงเดิม)
+# ------------------------------------------------------------
 
-# ------------------------------------------------------------
-# 3. ฟังก์ชันแบ่ง Markdown เป็น Chunk
-# ------------------------------------------------------------
 
 def split_markdown_into_chunks(text: str, max_chars: int = 2600):
-    """
-    แบ่ง KB โดยพยายามเก็บหัวข้อ ## ไว้กับเนื้อหา
-    ดีกว่าการ split ด้วยบรรทัดว่างเพียงอย่างเดียว
-    """
-
     text = text.strip()
-
     if not text:
         return []
-
-    # แยกก่อนทุกหัวข้อระดับ ## แต่ไม่ตัด ### ออกจาก ## โดยไม่จำเป็น
     sections = re.split(r"(?=^##\s+)", text, flags=re.MULTILINE)
-
     chunks = []
-
     for section in sections:
         section = section.strip()
-
         if not section:
             continue
-
-        # ถ้าส่วนไม่ยาวเกินไป ให้เก็บเป็น chunk เดียว
         if len(section) <= max_chars:
             chunks.append(section)
             continue
-
-        # ถ้ายาวมาก ค่อยแบ่งตามย่อหน้า
-        paragraphs = [
-            p.strip()
-            for p in re.split(r"\n\s*\n", section)
-            if p.strip()
-        ]
-
+        paragraphs = [p.strip()
+                      for p in re.split(r"\n\s*\n", section) if p.strip()]
         current = ""
-
         for paragraph in paragraphs:
-            candidate = (
-                paragraph
-                if not current
-                else current + "\n\n" + paragraph
-            )
-
+            candidate = paragraph if not current else current + "\n\n" + paragraph
             if len(candidate) <= max_chars:
                 current = candidate
             else:
                 if current:
                     chunks.append(current)
-
-                # กรณีย่อหน้าเดียวก็ยาวเกิน max_chars
                 if len(paragraph) > max_chars:
                     for start in range(0, len(paragraph), max_chars):
                         piece = paragraph[start:start + max_chars].strip()
@@ -217,51 +368,32 @@ def split_markdown_into_chunks(text: str, max_chars: int = 2600):
                     current = ""
                 else:
                     current = paragraph
-
         if current:
             chunks.append(current)
-
     return chunks
 
 
 # ------------------------------------------------------------
-# 4. โหลด RAG System
+# 4. โหลด RAG System (คงเดิม)
 # ------------------------------------------------------------
 
 @st.cache_resource(show_spinner="กำลังโหลดฐานความรู้ดอยขุนตาล...")
 def load_rag_system():
     if not KB_PATH.exists():
-        raise FileNotFoundError(
-            f"ไม่พบไฟล์ Knowledge Base: {KB_PATH.name}"
-        )
-
+        raise FileNotFoundError(f"ไม่พบไฟล์ Knowledge Base: {KB_PATH.name}")
     text = KB_PATH.read_text(encoding="utf-8")
-
     chunks = split_markdown_into_chunks(text)
-
     if not chunks:
-        raise ValueError("ไฟล์ Knowledge Base ว่าง หรือไม่สามารถสร้าง chunk ได้")
-
-    # Multilingual model รองรับภาษาไทย
+        raise ValueError(
+            "ไฟล์ Knowledge Base ว่าง หรือไม่สามารถสร้าง chunk ได้")
     model = SentenceTransformer(
-        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-    )
-
-    # normalize_embeddings=True เพื่อใช้ cosine similarity ผ่าน inner product
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     embeddings = model.encode(
-        chunks,
-        normalize_embeddings=True,
-        show_progress_bar=False,
-    )
-
+        chunks, normalize_embeddings=True, show_progress_bar=False)
     embeddings = np.asarray(embeddings, dtype="float32")
-
     dimension = embeddings.shape[1]
-
-    # เมื่อ normalize แล้ว IndexFlatIP ใช้จัดอันดับแบบ cosine similarity ได้
     index = faiss.IndexFlatIP(dimension)
     index.add(embeddings)
-
     return chunks, model, index
 
 
@@ -273,119 +405,60 @@ except Exception as e:
 
 
 # ------------------------------------------------------------
-# 5. เชื่อมต่อ Gemini
+# 5. เชื่อมต่อ Gemini (คงเดิม)
 # ------------------------------------------------------------
 
-api_key = (
-    os.environ.get("GOOGLE_API_KEY")
-    or os.environ.get("GEMINI_API_KEY")
-)
-
+api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 if not api_key:
     st.error(
-        "⚠️ ไม่พบ API Key กรุณาเพิ่ม GOOGLE_API_KEY "
-        "หรือ GEMINI_API_KEY ในไฟล์ .env"
-    )
+        "⚠️ ไม่พบ API Key กรุณาเพิ่ม GOOGLE_API_KEY หรือ GEMINI_API_KEY ในไฟล์ .env")
     st.stop()
 
 client = genai.Client(api_key=api_key)
-
-# สามารถเปลี่ยนผ่าน .env ได้ เช่น GEMINI_MODEL=gemini-3.5-flash
-GEMINI_MODEL = os.environ.get(
-    "GEMINI_MODEL",
-    "gemini-3.5-flash",
-)
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 
 # ------------------------------------------------------------
-# 6. Retrieval Functions
+# 6. Retrieval Functions (คงเดิม)
 # ------------------------------------------------------------
 
 def retrieve_context(question: str, top_k: int = 6):
-    """
-    ค้นหา chunk ที่เกี่ยวข้องกับคำถามมากที่สุด
-    """
-
     if not question.strip():
         return [], []
-
     query_embedding = embedder.encode(
-        [question],
-        normalize_embeddings=True,
-        show_progress_bar=False,
-    )
-
-    query_embedding = np.asarray(
-        query_embedding,
-        dtype="float32",
-    )
-
+        [question], normalize_embeddings=True, show_progress_bar=False)
+    query_embedding = np.asarray(query_embedding, dtype="float32")
     k = min(top_k, len(chunks))
-
-    scores, indices = index.search(
-        query_embedding,
-        k,
-    )
-
+    scores, indices = index.search(query_embedding, k)
     retrieved_chunks = []
     retrieved_scores = []
-
     for idx, score in zip(indices[0], scores[0]):
         if 0 <= idx < len(chunks):
             retrieved_chunks.append(chunks[idx])
             retrieved_scores.append(float(score))
-
     return retrieved_chunks, retrieved_scores
 
 
 def get_recent_conversation(max_messages: int = 6):
-    """
-    สร้างข้อความบริบทสนทนาสั้น ๆ
-    เพื่อให้คำถามต่อเนื่อง เช่น "แล้วต้องเอาน้ำกี่ลิตร"
-    เข้าใจบริบทจากข้อความก่อนหน้าได้ดีขึ้น
-    """
-
     history = st.session_state.get("messages", [])
-
     if not history:
         return "ไม่มีประวัติการสนทนาก่อนหน้า"
-
     recent = history[-max_messages:]
-
     lines = []
-
     for message in recent:
         role = message.get("role")
-
-        if role == "user":
-            speaker = "ผู้ใช้"
-        elif role == "assistant":
-            speaker = "ผู้ช่วย"
-        else:
+        speaker = "ผู้ใช้" if role == "user" else "ผู้ช่วย" if role == "assistant" else None
+        if not speaker:
             continue
-
         content = message.get("content", "").strip()
-
         if content:
-            # จำกัดขนาด history ไม่ให้ prompt โตเร็วเกินไป
             lines.append(f"{speaker}: {content[:1500]}")
-
     return "\n".join(lines) if lines else "ไม่มีประวัติการสนทนาก่อนหน้า"
 
 
-def build_user_message(
-    question: str,
-    retrieved_chunks: list[str],
-):
-    """
-    รวม Context จาก RAG + บริบทสนทนา + คำถาม
-    โดยวางคำถามไว้ท้ายสุดเพื่อให้โมเดลโฟกัสคำถามปัจจุบัน
-    """
-
+def build_user_message(question: str, retrieved_chunks: list[str]):
     context = "\n\n---\n\n".join(retrieved_chunks)
-
     conversation = get_recent_conversation()
-
     return f"""
 ต่อไปนี้คือข้อมูลที่ค้นคืนมาจาก Knowledge Base ดอยขุนตาล:
 
@@ -416,64 +489,96 @@ if "messages" not in st.session_state:
 
 
 # ------------------------------------------------------------
-# 8. Sidebar
+# 8. Sidebar (ดีไซน์ใหม่)
 # ------------------------------------------------------------
 
 with st.sidebar:
-    st.header("🏔️ ขอบเขตของผู้ช่วย")
-    st.write("**สถานที่:** ดอยขุนตาลเท่านั้น")
-    st.write("**เหมาะสำหรับ:** นักเดินป่ามือใหม่")
-    st.write("**ฐานความรู้:** `trekking_gear_kb.md`")
+    st.markdown("<h3>🧭 เนเจอร์นู้บไกด์ ⛰️</h3>", unsafe_allow_html=True)
 
-    st.divider()
-
+    # การ์ดข้อมูลทั่วไป
     st.markdown(
         """
-**ถามได้ เช่น**
-- ป่าแรกไปดอยขุนตาลไหวไหม
-- ต้องเตรียมของอะไรบ้าง
-- Y1–Y4 เดินอย่างไร
-- นอน Y2 ต้องเตรียมอะไร
-- ขึ้น Y4 เช้ามืดต้องพกอะไร
-- เดินจากสถานีขุนตานอย่างไร
-- ควรเตรียมน้ำและอาหารอย่างไร
-"""
+        <div class="sidebar-info-card">
+            <b>ข้อมูลทั่วไป</b><br>
+            สถานที่: ดอยขุนตาล<br>
+            เหมาะสำหรับ: ผู้เริ่มต้น (มือใหม่มากๆ)<br>
+            ฐานความรู้: <code>trekking_gear_kb.md</code>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.warning(
-        "ข้อมูลเปิด-ปิด ราคา รถไฟ น้ำ และอากาศ "
-        "อาจเปลี่ยนได้ ต้องตรวจสอบล่าสุดก่อนเดินทาง"
-    )
+    st.markdown("<b>คำแนะนำตามเส้นทาง</b>", unsafe_allow_html=True)
+    with st.expander("⛰️ Y1-Y4"):
+        st.write("ภาพรวมเส้นทางตั้งแต่เริ่มจนถึงยอด")
+    with st.expander("🚶‍♂️ Y1: เดินยังไงให้ไม่เหนื่อย?"):
+        st.write("เทคนิคการเดินป่าช่วงเริ่มต้น")
+    with st.expander("📸 Y3: แวะถ่ายรูปตรงไหนดี?"):
+        st.write("จุดเช็คอินที่ไม่ควรพลาด")
+    with st.expander("🏕️ Y4: เช้ามาต้องเตรียมอะไรบ้าง?"):
+        st.write("การเตรียมตัวดูพระอาทิตย์ขึ้น")
 
-    if st.button(
-        "🗑️ ล้างประวัติแชท",
-        use_container_width=True,
-    ):
+    st.markdown("<b>เตรียมตัวและอุปกรณ์</b>", unsafe_allow_html=True)
+    with st.expander("🎒 ต้องเตรียมของอะไรบ้าง?"):
+        st.write("เช็คลิสต์อุปกรณ์สำหรับมือใหม่")
+    with st.expander("💧 ควรเตรียมน้ำอาหารอย่างไร?"):
+        st.write("การคำนวณเสบียงและน้ำดื่ม")
+
+    st.write("")  # Spacer
+
+    if st.button("🗑️ ล้างประวัติแชท"):
         st.session_state.messages = []
         st.rerun()
 
+    if st.button("📄 PDF (Coming Soon)"):
+        pass
+
 
 # ------------------------------------------------------------
-# 9. ข้อความต้อนรับ
+# 9. Header & ข้อความต้อนรับ (ดีไซน์ใหม่)
 # ------------------------------------------------------------
+
+st.markdown(
+    f"""
+    <div class="hero-container">
+        <h1>🏕️ {APP_NAME} 🎒</h1>
+        <p>{APP_TAGLINE}</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 if not st.session_state.messages:
-    with st.chat_message("assistant"):
-        st.markdown(
-            """
-สวัสดีครับ 👋 ผมคือ **Trekking & Camping Buddy**
-
-ผมช่วยเตรียมตัวสำหรับ **การเดินป่าดอยขุนตาล** โดยเฉพาะ
-และออกแบบคำแนะนำสำหรับ **มือใหม่** ครับ
-
-ลองถามผมได้ เช่น  
-**“ผมไม่เคยเดินป่ามาก่อน ต้องเตรียมอะไรไปดอยขุนตาลบ้าง?”**
-"""
-        )
+    # แสดงการ์ดต้อนรับและประกาศเฉพาะตอนเริ่มแชท
+    st.markdown(
+        """
+        <div class="welcome-card">
+            <div class="welcome-header">
+                <div style="font-size: 3rem;">🤖</div>
+                <div class="welcome-text">
+                    <h3>สวัสดีครับเพื่อนใหม่! ให้ Nature Noob ช่วยก้าวแรกสู่ดอยขุนตาลของคุณ</h3>
+                    <p>ไม่ต้องกลัวหลง หรือไม่พร้อม เรามีคำตอบ!</p>
+                    <div class="pill-container">
+                        <span class="pill">Y1: เดินยังไงให้ไม่เหนื่อย?</span>
+                        <span class="pill">Y1 เหนื่อยไหม?</span>
+                        <span class="pill">อาหารแนะนำตรงไหนดี?</span>
+                        <span class="pill">Y4: เช้ามาต้องเตรียมอะไรบ้าง?</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert-card">
+            <h4>⚠️ ประกาศสำคัญ</h4>
+            <p>เปลี่ยนแปลงสภาพอากาศ โปรดเช็คการเตรียมพร้อม อุณหภูมิ น้ำ และอุปกรณ์กันฝนก่อนเดินทางเสมอ ข้อมูลเปิด-ปิด ราคา รถไฟ น้ำ อาจเปลี่ยนได้ ต้องตรวจสอบล่าสุดก่อนเดินทาง</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # ------------------------------------------------------------
-# 10. แสดงประวัติแชท
+# 10. แสดงประวัติแชท (คงเดิม)
 # ------------------------------------------------------------
 
 for msg in st.session_state.messages:
@@ -482,38 +587,20 @@ for msg in st.session_state.messages:
 
 
 # ------------------------------------------------------------
-# 11. Chat Input -> Retrieve -> Generate
+# 11. Chat Input -> Retrieve -> Generate (คงเดิม)
 # ------------------------------------------------------------
 
-prompt = st.chat_input(
-    "ถามเรื่องเดินป่าดอยขุนตาล เช่น Y2, Y4, อุปกรณ์ น้ำ อาหาร หรือการเตรียมตัว..."
-)
+prompt = st.chat_input("ถามเรื่องเดินป่าดอยขุนตาล")
 
 if prompt:
-    # แสดงและเก็บคำถามผู้ใช้
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Retrieval ทำก่อนเพิ่ม current user message เข้า history
-    # เพื่อไม่ให้ข้อความปัจจุบันซ้ำใน conversation_history
-    retrieved_chunks, scores = retrieve_context(
-        prompt,
-        top_k=6,
-    )
+    retrieved_chunks, scores = retrieve_context(prompt, top_k=6)
+    user_message = build_user_message(prompt, retrieved_chunks)
 
-    user_message = build_user_message(
-        prompt,
-        retrieved_chunks,
-    )
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    )
-
-    # Generate
     with st.chat_message("assistant"):
         with st.spinner("กำลังค้นข้อมูลดอยขุนตาล..."):
             try:
@@ -524,29 +611,10 @@ if prompt:
                         system_instruction=SYSTEM_INSTRUCTION,
                     ),
                 )
-
-                answer = (
-                    response.text.strip()
-                    if response.text
-                    else "ขออภัยครับ ระบบไม่ได้รับข้อความตอบกลับจาก AI"
-                )
-
+                answer = response.text.strip(
+                ) if response.text else "ขออภัยครับ ระบบไม่ได้รับข้อความตอบกลับจาก AI"
                 st.markdown(answer)
-
                 st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": answer,
-                    }
-                )
-
+                    {"role": "assistant", "content": answer})
             except Exception as e:
-                st.error(
-                    "เกิดข้อผิดพลาดในการเชื่อมต่อ Gemini\n\n"
-                    f"`{e}`"
-                )
-
-
-# ============================================================
-# End of app.py
-# ============================================================
+                st.error(f"เกิดข้อผิดพลาดในการเชื่อมต่อ Gemini\n\n`{e}`")
