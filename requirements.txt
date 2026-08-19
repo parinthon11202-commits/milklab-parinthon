@@ -1,16 +1,91 @@
-# S1
-google-genai>=0.4.0
-python-dotenv>=1.0.0
+# ============================================================
+# Trekking & Camping Buddy
+# Production + Development Dependencies
+# Master KB: trekking_gear_kb.md
+#
+# Python:
+#   Required: Python >= 3.10
+#   Recommended: Python 3.11 or 3.12
+#
+# Install:
+#   python -m pip install --upgrade pip
+#   python -m pip install -r requirements.txt
+# ============================================================
 
-# S2
-gspread>=6.0.0
-google-auth>=2.30.0
-requests>=2.31.0
 
-# S3
-streamlit>=1.35.0
-sentence-transformers>=3.0.0
-faiss-cpu>=1.8.0
+# ------------------------------------------------------------
+# AI / Gemini
+# Used by:
+#   app.py
+#   agent_harness.py
+#   caption_generator.py
+# ------------------------------------------------------------
 
-# Dev tools
-pytest>=8.0.0
+google-genai>=2.13.0,<3.0.0
+python-dotenv>=1.2.2,<2.0.0
+
+
+# ------------------------------------------------------------
+# RAG / Semantic Search
+# Used by app.py
+# ------------------------------------------------------------
+
+# Multilingual embeddings for Thai KB retrieval
+sentence-transformers>=5.5.1,<6.0.0
+
+# Pin Transformers to 4.x for this text-only RAG app.
+# Sentence Transformers supports Transformers >=4.41 and <6.
+transformers>=4.41.0,<5.0.0
+
+# IMPORTANT:
+# Compatible pair from the official PyTorch version table.
+# This fixes: ModuleNotFoundError: No module named 'torchvision'
+torch==2.4.0
+torchvision==0.19.0
+
+faiss-cpu>=1.14.3,<2.0.0
+numpy>=1.26.4,<3.0.0
+
+
+# ------------------------------------------------------------
+# Web UI
+# Used by app.py
+# ------------------------------------------------------------
+
+streamlit>=1.60.0,<2.0.0
+
+
+# ------------------------------------------------------------
+# Google Sheets / Sales Logger
+# Used by sales_logger.py
+# ------------------------------------------------------------
+
+gspread>=6.0.0,<7.0.0
+google-auth>=2.56.2,<3.0.0
+
+
+# ------------------------------------------------------------
+# HTTP / Telegram
+# Used by:
+#   sales_logger.py
+#   agent_harness.py
+# ------------------------------------------------------------
+
+requests>=2.34.2,<3.0.0
+
+
+# ------------------------------------------------------------
+# Time zone support
+# Used by:
+#   sales_logger.py
+#   agent_harness.py
+# ------------------------------------------------------------
+
+tzdata>=2026.3
+
+
+# ------------------------------------------------------------
+# Development / Testing
+# ------------------------------------------------------------
+
+pytest>=9.1.1,<10.0.0
