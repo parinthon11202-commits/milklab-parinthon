@@ -21,6 +21,7 @@ from sentence_transformers import SentenceTransformer
 
 BASE_DIR = Path(__file__).resolve().parent
 KB_PATH = BASE_DIR / "trekking_gear_kb.md"
+ROUTE_MAP_PATH = BASE_DIR / "assets" / "doi_khuntan_route.jpg"
 
 load_dotenv(BASE_DIR / ".env", override=True)
 
@@ -542,21 +543,73 @@ def retrieve_context(question: str, top_k: int = 6):
     return retrieved_chunks, retrieved_scores
 
 
+# ------------------------------------------------------------
+# แสดงแผนที่เมื่อผู้ใช้ถามเกี่ยวกับเส้นทาง
+# ------------------------------------------------------------
+
+def should_show_route_map(question: str) -> bool:
+    question = question.lower().strip()
+
+    route_keywords = [
+        "เส้นทาง",
+        "แผนที่",
+        "ทางเดิน",
+        "ทางขึ้น",
+        "ทางไป",
+        "เดินไป",
+        "เดินขึ้น",
+        "y1",
+        "y2",
+        "y3",
+        "y4",
+        "yaw 1",
+        "yaw 2",
+        "yaw 3",
+        "yaw 4",
+        "จุดพัก",
+        "จุดกางเต็นท์",
+        "ตาดเหมย",
+        "น้ำตกตาดเหมย",
+    ]
+
+    return any(keyword in question for keyword in route_keywords)
+
+
 def get_recent_conversation(max_messages: int = 6):
     history = st.session_state.get("messages", [])
+
     if not history:
         return "ไม่มีประวัติการสนทนาก่อนหน้า"
+
     recent = history[-max_messages:]
     lines = []
+
     for message in recent:
         role = message.get("role")
-        speaker = "ผู้ใช้" if role == "user" else "ผู้ช่วย" if role == "assistant" else None
+
+        speaker = (
+            "ผู้ใช้"
+            if role == "user"
+            else "ผู้ช่วย"
+            if role == "assistant"
+            else None
+        )
+
         if not speaker:
             continue
+
         content = message.get("content", "").strip()
+
         if content:
-            lines.append(f"{speaker}: {content[:1500]}")
-    return "\n".join(lines) if lines else "ไม่มีประวัติการสนทนาก่อนหน้า"
+            lines.append(
+                f"{speaker}: {content[:1500]}"
+            )
+
+    return (
+        "\n".join(lines)
+        if lines
+        else "ไม่มีประวัติการสนทนาก่อนหน้า"
+    )
 
 
 def build_user_message(question: str, retrieved_chunks: list[str]):
@@ -689,21 +742,40 @@ if not st.session_state.messages:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
+        # ถ้าข้อความผู้ช่วยนี้เกี่ยวข้องกับเส้นทาง ให้แสดงรูปแผนที่ด้วย
+        if (
+            msg.get("role") == "assistant"
+            and msg.get("show_route_map", False)
+            and ROUTE_MAP_PATH.exists()
+        ):
+            st.image(
+                str(ROUTE_MAP_PATH),
+                caption="🗺️ แผนที่เส้นทางดอยขุนตาล Y1–Y4",
+                use_container_width=True,
+            )
+
         st.markdown(msg["content"])
 
+# ปุ่มคำถามด่วน
+quick_cols = st.columns([1, 1, 1], gap="small")
 
-# ปุ่มคำถามด่วนแบบในภาพ
-quick_cols = st.columns([1.2, 1, 1, 4.6], gap="small")
-if quick_cols[0].button("เตรียมอุปกรณ์ยังไง?", key="q_gear"):
-    st.session_state.queued_prompt = "มือใหม่ไปดอยขุนตาลควรเตรียมอุปกรณ์อะไรบ้าง?"
-    st.rerun()
-if quick_cols[1].button("Y1 เหนื่อยไหม?", key="q_y1"):
-    st.session_state.queued_prompt = "Y1 เหนื่อยไหม สำหรับมือใหม่ควรเดินอย่างไร?"
-    st.rerun()
-if quick_cols[2].button("อาหารแนะนำ?", key="q_food"):
-    st.session_state.queued_prompt = "ควรเตรียมน้ำและอาหารสำหรับทริปดอยขุนตาลอย่างไร?"
+if quick_cols[0].button("🎒", key="q_gear", help="แนะนำอุปกรณ์เดินป่า"):
+    st.session_state.queued_prompt = (
+        "มือใหม่ไปดอยขุนตาลควรเตรียมอุปกรณ์อะไรบ้าง?"
+    )
     st.rerun()
 
+if quick_cols[1].button("🍱", key="q_food", help="แนะนำน้ำและอาหาร"):
+    st.session_state.queued_prompt = (
+        "ควรเตรียมน้ำและอาหารสำหรับทริปดอยขุนตาลอย่างไร?"
+    )
+    st.rerun()
+
+if quick_cols[2].button("🗺️", key="q_route_map", help="ดูแผนที่เส้นทาง"):
+    st.session_state.queued_prompt = (
+        "ขอภาพเส้นทางทั้งหมดของดอยขุนตาล"
+    )
+    st.rerun()
 
 # ------------------------------------------------------------
 # 11. Chat Input -> Retrieve -> Generate
@@ -714,24 +786,59 @@ typed_prompt = st.chat_input("ถามเรื่องเดินป่า�
 prompt = queued_prompt or typed_prompt
 
 if prompt:
+    # ตรวจตั้งแต่ตอนรับคำถามว่าเกี่ยวกับเส้นทางหรือไม่
+    show_route_map = should_show_route_map(prompt)
+
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": prompt,
+        }
+    )
 
     with st.chat_message("assistant"):
+
+        # ----------------------------------------------------
+        # แสดงรูปแผนที่เมื่อคำถามเกี่ยวกับเส้นทาง / Y1-Y4
+        # ----------------------------------------------------
+        if show_route_map:
+            if ROUTE_MAP_PATH.exists():
+                st.image(
+                    str(ROUTE_MAP_PATH),
+                    caption="🗺️ แผนที่เส้นทางดอยขุนตาล Y1–Y4",
+                    use_container_width=True,
+                )
+            else:
+                st.warning(
+                    "⚠️ ไม่พบไฟล์แผนที่ กรุณาตรวจสอบว่าไฟล์ "
+                    "assets/doi_khuntan_route.jpg มีอยู่ในโปรเจกต์"
+                )
+
+        # ----------------------------------------------------
+        # Gemini + RAG
+        # ----------------------------------------------------
         if client is None:
-            st.error(
+            error_message = (
                 "⚠️ ยังไม่พบ GOOGLE_API_KEY หรือ GEMINI_API_KEY ในไฟล์ .env "
                 "หน้า UI ใช้งานได้แล้ว แต่ต้องตั้ง API key ก่อนจึงจะให้ AI ตอบได้"
             )
+            st.error(error_message)
+
         else:
             try:
                 with st.spinner("กำลังโหลด/ค้นฐานความรู้ดอยขุนตาล..."):
                     retrieved_chunks, scores = retrieve_context(
-                        prompt, top_k=6)
+                        prompt,
+                        top_k=6,
+                    )
 
-                user_message = build_user_message(prompt, retrieved_chunks)
+                user_message = build_user_message(
+                    prompt,
+                    retrieved_chunks,
+                )
 
                 with st.spinner("กำลังคิดคำตอบ..."):
                     response = client.models.generate_content(
@@ -749,12 +856,20 @@ if prompt:
                 )
 
                 st.markdown(answer)
+
+                # เก็บ flag เพื่อให้รูปยังแสดงในประวัติแชทหลัง rerun
                 st.session_state.messages.append(
-                    {"role": "assistant", "content": answer}
+                    {
+                        "role": "assistant",
+                        "content": answer,
+                        "show_route_map": show_route_map,
+                    }
                 )
 
             except FileNotFoundError as e:
                 st.error(f"⚠️ ไม่พบ Knowledge Base: {e}")
 
             except Exception as e:
-                st.error(f"เกิดข้อผิดพลาดระหว่างประมวลผล\n\n`{e}`")
+                st.error(
+                    f"เกิดข้อผิดพลาดระหว่างประมวลผล\n\n`{e}`"
+                )
